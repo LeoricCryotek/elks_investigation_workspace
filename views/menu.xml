@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ============================================================
+             Standalone "Investigations" app — top-level menu.
+             Visible to any user who holds at least one investigation role.
+             ============================================================ -->
+        <menuitem id="menu_investigations_root"
+                  name="Investigations"
+                  groups="group_elks_investigation_committee,group_elks_investigation_chair,group_elks_investigation_admin,elkscontacts.group_elks_secretary"
+                  sequence="60"
+                  web_icon="elks_investigation_workspace,static/description/icon.png"/>
+
+        <!-- ===== Worklist menus ===== -->
+        <menuitem id="menu_my_investigations"
+                  name="Investigations"
+                  parent="menu_investigations_root"
+                  action="action_my_investigations"
+                  groups="group_elks_investigation_committee,group_elks_investigation_chair,group_elks_investigation_admin"
+                  sequence="10"/>
+
+        <!-- ===== Help / Guide ===== -->
+        <record id="action_investigation_guide" model="ir.actions.act_url">
+            <field name="name">Committee Guide</field>
+            <field name="url">/elks_investigation_workspace/static/description/guide.html</field>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="menu_investigation_guide"
+                  name="Guide"
+                  parent="menu_investigations_root"
+                  action="action_investigation_guide"
+                  groups="group_elks_investigation_committee,group_elks_investigation_chair,group_elks_investigation_admin,elkscontacts.group_elks_secretary"
+                  sequence="5"/>
+
+        <menuitem id="menu_membership_applications_link"
+                  name="Membership Applications"
+                  parent="menu_investigations_root"
+                  action="elkscontacts.action_elks_membership_application"
+                  groups="group_elks_investigation_chair,group_elks_investigation_admin,elkscontacts.group_elks_secretary"
+                  sequence="30"/>
+
+        <!-- ===== Configuration submenu ===== -->
+        <menuitem id="menu_investigations_config"
+                  name="Configuration"
+                  parent="menu_investigations_root"
+                  groups="group_elks_investigation_chair,group_elks_investigation_admin,elkscontacts.group_elks_secretary"
+                  sequence="90"/>
+        <menuitem id="menu_portal_directory"
+                  name="Background-Check Portal Directory"
+                  parent="menu_investigations_config"
+                  action="action_portals"
+                  sequence="10"/>
+
+        <!-- ===== User Roles & Permissions — opens the standard Users
+             list filtered to people who already hold an investigation role
+             ===== -->
+        <record id="action_investigation_users" model="ir.actions.act_window">
+            <field name="name">Committee</field>
+            <field name="res_model">res.users</field>
+            <field name="view_mode">list,form</field>
+            <field name="view_id" ref="view_investigation_committee_users_list"/>
+            <field name="domain"
+                   eval="[('group_ids', 'in', [
+                        ref('group_elks_investigation_committee'),
+                        ref('group_elks_investigation_chair'),
+                        ref('group_elks_investigation_admin')])]"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Investigation roles are auto-synced from Lodge committees
+                </p>
+                <p>
+                    <strong>Auto-granted:</strong> members of the Investigation
+                    committee become <em>Committee Member</em>; the committee
+                    chair becomes <em>Chairman</em>; the current Exalted Ruler
+                    and any Lodge Secretary become <em>Administration</em>.
+                </p>
+                <p>
+                    <strong>Custom assignments:</strong> for users who don't
+                    fit those rules, set the role manually on the user's
+                    Access Rights tab (the "Elks Investigation Committee" row
+                    in the Productivity section).
+                </p>
+                <p>
+                    Use <strong>Sync Roles Now</strong> below to force an
+                    immediate re-sync; otherwise it runs nightly.
+                </p>
+            </field>
+        </record>
+        <menuitem id="menu_investigation_users"
+                  name="Committee"
+                  parent="menu_investigations_config"
+                  action="action_investigation_users"
+                  groups="group_elks_investigation_admin,elkscontacts.group_elks_secretary"
+                  sequence="20"/>
+
+        <!-- ===== Manual "Sync Roles Now" trigger — server action so it
+             appears as a menu item without needing a form view ===== -->
+        <record id="action_sync_investigation_roles_server" model="ir.actions.server">
+            <field name="name">Sync Investigation Roles Now</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="state">code</field>
+            <field name="code">
+action = model._sync_investigation_roles() and {
+    'type': 'ir.actions.client',
+    'tag': 'display_notification',
+    'params': {
+        'title': 'Investigation roles synced',
+        'message': 'Roles reconciled with current Lodge state. See server log for counts.',
+        'type': 'success',
+        'sticky': False,
+    },
+}
+            </field>
+        </record>
+        <menuitem id="menu_sync_roles_now"
+                  name="Sync Roles Now"
+                  parent="menu_investigations_config"
+                  action="action_sync_investigation_roles_server"
+                  groups="group_elks_investigation_admin,elkscontacts.group_elks_secretary"
+                  sequence="30"/>
+    </data>
+</odoo>

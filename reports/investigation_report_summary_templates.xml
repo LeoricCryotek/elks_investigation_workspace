@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ============================================================
+             ONE-PAGE SUMMARY REPORT (default)
+             Designed to fit on a single Letter page.
+             ============================================================ -->
+        <template id="report_investigation_summary_document">
+            <t t-call="web.external_layout">
+                <div class="page" style="font-family: Calibri, Arial, sans-serif; font-size: 10pt;">
+                    <table style="width:100%; border:none; margin-bottom:6px;">
+                        <tr>
+                            <td style="border:none;">
+                                <strong style="color:#1F3864; font-size:13pt;">BPOE — LEWISTON LODGE #896</strong><br/>
+                                <em style="color:#595959;">Investigating Committee — Findings Summary</em>
+                            </td>
+                            <td style="border:none; text-align:right; vertical-align:top;">
+                                <strong>Application:</strong> <span t-field="o.name"/><br/>
+                                <strong>Date printed:</strong>
+                                <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table class="table table-sm table-bordered" style="margin-bottom:8px; font-size:9pt;">
+                        <tr>
+                            <th style="width:18%; background:#F2F2F2;">Applicant</th>
+                            <td style="width:32%;"><strong><span t-field="o.applicant_display_name"/></strong>
+                                <span t-if="o.applicant_date_of_birth"> &#160;|&#160; DOB
+                                    <span t-field="o.applicant_date_of_birth"/></span>
+                            </td>
+                            <th style="width:18%; background:#F2F2F2;">Type</th>
+                            <td style="width:32%;"><span t-field="o.application_type"/></td>
+                        </tr>
+                        <tr>
+                            <th style="background:#F2F2F2;">Investigator</th>
+                            <td><span t-field="o.investigator_id"/></td>
+                            <th style="background:#F2F2F2;">Period</th>
+                            <td><span t-field="o.date_investigation_assigned"/> —
+                                <t t-esc="o.date_investigation_complete or '(in progress)'"/></td>
+                        </tr>
+                        <tr>
+                            <th style="background:#F2F2F2;">States checked</th>
+                            <td><span t-field="o.investigation_states_in_history"/></td>
+                            <th style="background:#F2F2F2;">Proposer</th>
+                            <td><span t-field="o.proposer_display"/></td>
+                        </tr>
+                    </table>
+
+                    <!-- Coverage strip -->
+                    <table style="width:100%; margin-bottom:8px; font-size:9pt;">
+                        <tr>
+                            <td style="border:1px solid #ccc; padding:6px; text-align:center; width:25%; background:#F8F9FA;">
+                                <div style="color:#595959; font-size:8pt;">CHECKS RUN</div>
+                                <div style="font-size:18pt; color:#1F3864;">
+                                    <span t-esc="o.investigation_check_count - o.investigation_pending_check_count"/>
+                                    <span style="font-size:10pt; color:#999;">/<span t-esc="o.investigation_check_count"/></span>
+                                </div>
+                            </td>
+                            <td style="border:1px solid #ccc; padding:6px; text-align:center; width:25%; background:#F8F9FA;">
+                                <div style="color:#595959; font-size:8pt;">HITS CAPTURED</div>
+                                <div style="font-size:18pt;" t-attf-style="color:#{'C0392B' if o.investigation_hit_count else '2E8640'};">
+                                    <span t-esc="o.investigation_hit_count"/>
+                                </div>
+                            </td>
+                            <td style="border:1px solid #ccc; padding:6px; text-align:center; width:25%; background:#F8F9FA;">
+                                <div style="color:#595959; font-size:8pt;">CROSS-CHECK FLAGS</div>
+                                <div style="font-size:18pt;" t-attf-style="color:#{'C0392B' if o.investigation_flag_count else '2E8640'};">
+                                    <span t-esc="o.investigation_flag_count"/>
+                                </div>
+                            </td>
+                            <td style="border:1px solid #ccc; padding:6px; text-align:center; width:25%; background:#F8F9FA;">
+                                <div style="color:#595959; font-size:8pt;">RECOMMENDATION</div>
+                                <div style="font-size:14pt; font-weight:bold;"
+                                     t-attf-style="color:#{ {'favorable':'2E8640','unfavorable':'C0392B'}.get(o.investigation_result, '999') };">
+                                    <t t-if="o.investigation_result == 'favorable'">APPROVE</t>
+                                    <t t-elif="o.investigation_result == 'unfavorable'">DENY</t>
+                                    <t t-else=""><em>pending</em></t>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Per-jurisdiction one-liner table -->
+                    <strong style="color:#1F3864;">Jurisdictions Checked</strong>
+                    <table class="table table-sm table-bordered" style="margin:4px 0 8px; font-size:9pt;">
+                        <thead style="background:#1F3864; color:white;">
+                            <tr><th>Jurisdiction</th><th>Source</th><th>Result</th><th>Hits</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.investigation_check_ids" t-as="chk"
+                                t-attf-style="background:#{ {'no_records':'#F0F9F0','match_found':'#FCEAEA','possible_match':'#FFF4E1','skipped':'#F5F5F5','pending':'#FFFFFF','portal_unavailable':'#F5F5F5'}.get(chk.result_summary, '#FFFFFF') };">
+                                <td><span t-field="chk.jurisdiction_code"/></td>
+                                <td><span t-field="chk.source_code"/></td>
+                                <td><span t-field="chk.result_summary"/></td>
+                                <td><t t-esc="len(chk.hit_ids)"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- High-severity flags only -->
+                    <t t-if="o.investigation_flag_ids">
+                        <strong style="color:#C0392B;">Flags requiring committee review</strong>
+                        <ul style="margin:4px 0 8px; padding-left:20px; font-size:9pt;">
+                            <t t-foreach="o.investigation_flag_ids.filtered(lambda f: f.severity in ('high','medium'))" t-as="f">
+                                <li>
+                                    <strong t-attf-style="color:#{'C0392B' if f.severity=='high' else 'D9822A'};">
+                                        [<span t-field="f.severity"/>]
+                                    </strong>
+                                    <span t-field="f.message"/>
+                                </li>
+                            </t>
+                        </ul>
+                    </t>
+
+                    <!-- Reason if denied -->
+                    <t t-if="o.investigation_result == 'unfavorable' and o.investigation_denial_reason">
+                        <strong style="color:#C0392B;">Reason for DENY recommendation</strong>
+                        <p style="margin:4px 0 8px; font-size:9pt;">
+                            <span t-field="o.investigation_denial_reason"/>
+                        </p>
+                    </t>
+
+                    <!-- Investigator notes -->
+                    <t t-if="o.investigation_notes">
+                        <strong style="color:#1F3864;">Investigator notes</strong>
+                        <p style="margin:4px 0 8px; font-size:9pt;">
+                            <span t-field="o.investigation_notes"/>
+                        </p>
+                    </t>
+
+                    <!-- Sign-off line -->
+                    <table style="width:100%; margin-top:18px; font-size:9pt;">
+                        <tr>
+                            <td style="border:none; border-top:1px solid #999; padding-top:4px; width:50%;">
+                                <em>Investigator signature</em>
+                            </td>
+                            <td style="border:none; border-top:1px solid #999; padding-top:4px; width:25%;">
+                                <em>Printed name</em>
+                            </td>
+                            <td style="border:none; border-top:1px solid #999; padding-top:4px; width:25%;">
+                                <em>Date</em>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p style="font-size:7pt; color:#999; margin-top:14px;">
+                        Confidential — for Investigating Committee, Lodge Secretary, and Exalted Ruler only.
+                        For full per-check detail, captured hits, and the FCRA adverse-action procedure,
+                        print the <em>Detailed Findings Report</em>.
+                    </p>
+                </div>
+            </t>
+        </template>
+
+        <template id="report_investigation_summary">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="elks_investigation_workspace.report_investigation_summary_document"/>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>

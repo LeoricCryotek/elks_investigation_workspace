@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_investigation_document">
+            <t t-call="web.external_layout">
+                <div class="page" style="font-family: Calibri, Arial, sans-serif;">
+                    <h2 style="text-align:center; color:#1F3864; margin-bottom:0;">
+                        BENEVOLENT AND PROTECTIVE ORDER OF ELKS — LEWISTON LODGE #896
+                    </h2>
+                    <p style="text-align:center; font-style:italic; color:#595959; margin-top:0;">
+                        Investigating Committee — Background Investigation Findings Report
+                    </p>
+
+                    <div style="background:#FFF2CC; padding:10px; border-left:4px solid #1F3864; margin: 12px 0;">
+                        <strong>CONFIDENTIAL — INVESTIGATING COMMITTEE EYES ONLY.</strong>
+                        Distribute only to committee members, the Lodge Secretary, and the Exalted Ruler.
+                    </div>
+
+                    <h3 style="color:#1F3864;">1. Applicant Summary</h3>
+                    <table class="table table-sm table-bordered" style="width:100%;">
+                        <tr><th style="width:25%; background:#F2F2F2;">Application #</th>
+                            <td><span t-field="o.name"/></td></tr>
+                        <tr><th style="background:#F2F2F2;">Type</th>
+                            <td><span t-field="o.application_type"/></td></tr>
+                        <tr><th style="background:#F2F2F2;">Date proposed</th>
+                            <td><span t-field="o.date_proposed"/></td></tr>
+                        <tr><th style="background:#F2F2F2;">Investigator</th>
+                            <td><span t-field="o.investigator_id"/></td></tr>
+                        <tr><th style="background:#F2F2F2;">Investigation period</th>
+                            <td><span t-field="o.date_investigation_assigned"/> —
+                                <t t-esc="o.date_investigation_complete or '(in progress)'"/></td></tr>
+                        <tr><th style="background:#F2F2F2;">Applicant</th>
+                            <td><span t-field="o.applicant_display_name"/></td></tr>
+                        <tr><th style="background:#F2F2F2;">Maiden / aliases</th>
+                            <td><t t-esc="', '.join(filter(None, [o.applicant_maiden_name, o.applicant_aliases])) or '—'"/></td></tr>
+                        <tr><th style="background:#F2F2F2;">DOB</th>
+                            <td><span t-field="o.applicant_date_of_birth"/></td></tr>
+                        <tr><th style="background:#F2F2F2;">Current address</th>
+                            <td>
+                                <span t-field="o.applicant_street"/>,
+                                <span t-field="o.applicant_city"/>
+                                <span t-if="o.applicant_state_id">,
+                                    <span t-field="o.applicant_state_id.code"/>
+                                </span>
+                                <span t-field="o.applicant_zip"/>
+                            </td></tr>
+                        <tr><th style="background:#F2F2F2;">Phone / Email</th>
+                            <td><span t-field="o.applicant_phone"/> &#160; /
+                                <span t-field="o.applicant_email"/></td></tr>
+                    </table>
+
+                    <h4 style="color:#1F3864;">2. Residential History</h4>
+                    <table class="table table-sm table-bordered" t-if="o.investigation_address_history_ids">
+                        <thead style="background:#1F3864; color:white;">
+                            <tr><th>Street</th><th>City</th><th>State</th><th>From</th><th>To</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.investigation_address_history_ids" t-as="a">
+                                <td><span t-field="a.street"/></td>
+                                <td><span t-field="a.city"/></td>
+                                <td><span t-field="a.state_code"/></td>
+                                <td><span t-field="a.date_from"/></td>
+                                <td><span t-field="a.date_to"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p t-if="not o.investigation_address_history_ids" style="font-style:italic; color:#595959;">
+                        (none recorded)
+                    </p>
+
+                    <h4 style="color:#1F3864;">3. Employment History</h4>
+                    <table class="table table-sm table-bordered" t-if="o.investigation_employment_history_ids">
+                        <thead style="background:#1F3864; color:white;">
+                            <tr><th>Employer</th><th>City</th><th>State</th><th>Role</th><th>From</th><th>To</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.investigation_employment_history_ids" t-as="e">
+                                <td><span t-field="e.employer"/></td>
+                                <td><span t-field="e.city"/></td>
+                                <td><span t-field="e.state_code"/></td>
+                                <td><span t-field="e.role"/></td>
+                                <td><span t-field="e.date_from"/></td>
+                                <td><span t-field="e.date_to"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 style="color:#1F3864;">4. Reference Checks</h4>
+                    <table class="table table-sm table-bordered" t-if="o.investigation_reference_ids">
+                        <thead style="background:#1F3864; color:white;">
+                            <tr><th>Name</th><th>Relationship</th><th>Date</th><th>Recommendation</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.investigation_reference_ids" t-as="r">
+                                <td><span t-field="r.name"/></td>
+                                <td><span t-field="r.relationship"/></td>
+                                <td><span t-field="r.contacted_on"/></td>
+                                <td><span t-field="r.recommendation"/></td>
+                                <td><span t-field="r.notes"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="page-break-after:always;"/>
+                    <h3 style="color:#1F3864;">5. Jurisdiction-by-Jurisdiction Findings</h3>
+                    <t t-foreach="o.investigation_check_ids" t-as="chk">
+                        <h5 style="color:#1F3864; margin-top:14px;">
+                            [<span t-field="chk.jurisdiction_code"/>]
+                            <span t-field="chk.source_label"/>
+                        </h5>
+                        <table class="table table-sm table-bordered" style="font-size:9pt;">
+                            <tr><th style="width:22%; background:#F2F2F2;">URL</th>
+                                <td><span t-field="chk.url"/></td></tr>
+                            <tr><th style="background:#F2F2F2;">Date / Operator</th>
+                                <td><span t-field="chk.date_checked"/> &#160;—
+                                    <span t-field="chk.operator_id"/></td></tr>
+                            <tr><th style="background:#F2F2F2;">Result</th>
+                                <td><span t-field="chk.result_summary"/></td></tr>
+                            <tr t-if="chk.operator_notes">
+                                <th style="background:#F2F2F2;">Notes</th>
+                                <td><span t-field="chk.operator_notes"/></td></tr>
+                        </table>
+                        <table class="table table-sm table-bordered" t-if="chk.hit_ids" style="font-size:9pt;">
+                            <thead style="background:#1F3864; color:white;">
+                                <tr>
+                                    <th>Name on record</th><th>DOB</th><th>Case #</th>
+                                    <th>Charges</th><th>Disposition</th><th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="chk.hit_ids" t-as="h">
+                                    <td><span t-field="h.name_on_record"/></td>
+                                    <td><span t-field="h.dob_on_record"/></td>
+                                    <td><span t-field="h.case_number"/></td>
+                                    <td><span t-field="h.charges"/></td>
+                                    <td><span t-field="h.disposition"/></td>
+                                    <td><span t-field="h.notes"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+
+                    <div style="page-break-after:always;"/>
+                    <h3 style="color:#1F3864;">6. Cross-Check Flags</h3>
+                    <p t-if="not o.investigation_flag_ids" style="font-style:italic; color:#595959;">
+                        No anomalies detected. Identity, dates, addresses, and coverage are internally consistent.
+                    </p>
+                    <table class="table table-sm table-bordered" t-if="o.investigation_flag_ids">
+                        <thead style="background:#1F3864; color:white;">
+                            <tr><th style="width:10%;">Severity</th>
+                                <th style="width:15%;">Category</th>
+                                <th>Message</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.investigation_flag_ids" t-as="f">
+                                <td><strong><span t-field="f.severity"/></strong></td>
+                                <td><span t-field="f.category"/></td>
+                                <td><span t-field="f.message"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 style="color:#1F3864;">7. Investigator Recommendation</h3>
+                    <p style="font-size:14pt;">
+                        <strong>Recommendation: </strong>
+                        <t t-if="o.investigation_result == 'favorable'">
+                            <span style="color:#2E8640;">APPROVE</span>
+                        </t>
+                        <t t-elif="o.investigation_result == 'unfavorable'">
+                            <span style="color:#C0392B;">DENY</span>
+                        </t>
+                        <t t-else=""><em>not yet submitted</em></t>
+                    </p>
+                    <p t-if="o.investigation_result == 'unfavorable' and o.investigation_denial_reason">
+                        <strong>Reason: </strong><span t-field="o.investigation_denial_reason"/>
+                    </p>
+                    <p t-if="o.investigation_notes" style="color:#595959;">
+                        <em>Notes:</em> <span t-field="o.investigation_notes"/>
+                    </p>
+
+                    <h4 style="color:#1F3864; margin-top:14px;">8. Adverse-Action Procedure (if DENY)</h4>
+                    <p style="font-size:10pt;">
+                        If the membership decision is AGAINST and was based on a
+                        third-party consumer-reporting agency report, the Lodge must
+                        follow the federal FCRA two-step adverse-action procedure:
+                        pre-adverse-action notice with a copy of the report and the
+                        FCRA summary-of-rights, allowing a reasonable time (typically
+                        5 business days) to dispute; then a final adverse-action
+                        notice identifying the reporting agency and the applicant's
+                        right to dispute the report directly with that agency.
+                    </p>
+                </div>
+            </t>
+        </template>
+
+        <template id="report_investigation">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="elks_investigation_workspace.report_investigation_document"/>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>

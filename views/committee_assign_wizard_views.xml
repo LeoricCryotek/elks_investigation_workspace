@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_committee_assign_wizard_form" model="ir.ui.view">
+            <field name="name">elks.investigation.committee.assign.wizard.form</field>
+            <field name="model">elks.investigation.committee.assign.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Add Committee Members">
+                    <sheet>
+                        <div role="status" class="alert alert-info">
+                            Pick one or more existing internal users and the role
+                            you want to grant them. To remove a role, edit the
+                            user directly and uncheck the Investigation Committee
+                            level in their Access Rights tab.
+                        </div>
+                        <group>
+                            <field name="role_level" widget="radio" required="1"/>
+                        </group>
+                        <separator string="Internal users to add"/>
+                        <field name="user_ids" widget="many2many_tags"
+                               options="{'no_create': True, 'no_create_edit': True}"/>
+                    </sheet>
+                    <footer>
+                        <button name="action_assign"
+                                string="Assign Selected Users"
+                                type="object"
+                                class="btn-primary"
+                                invisible="not user_ids"/>
+                        <button special="cancel" string="Cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_committee_assign_wizard" model="ir.actions.act_window">
+            <field name="name">Add Committee Members</field>
+            <field name="res_model">elks.investigation.committee.assign.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- ===========================================================
+             Custom list view for res.users used by the Committee menu.
+             - create="0" disables the standard "New User" button so the
+               chair can't accidentally create new user accounts.
+             - Adds an "Add Members" button in the list header that
+               opens the wizard.
+             =========================================================== -->
+        <record id="view_investigation_committee_users_list" model="ir.ui.view">
+            <field name="name">elks.investigation.committee.users.list</field>
+            <field name="model">res.users</field>
+            <field name="priority">99</field>
+            <field name="arch" type="xml">
+                <list create="0" string="Investigation Committee">
+                    <header>
+                        <button name="%(action_committee_assign_wizard)d"
+                                type="action"
+                                string="Add Members"
+                                class="btn-primary"/>
+                    </header>
+                    <field name="name"/>
+                    <field name="login"/>
+                    <field name="email" optional="show"/>
+                    <field name="active" invisible="1"/>
+                </list>
+            </field>
+        </record>
+    </data>
+</odoo>

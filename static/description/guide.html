@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Investigation Committee Guide</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+               max-width: 880px; margin: 40px auto; padding: 0 24px; color: #333;
+               line-height: 1.6; }
+        h1 { color: #4B277A; border-bottom: 3px solid #4B277A; padding-bottom: 12px; font-size: 32px; }
+        h2 { color: #4B277A; margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+        h3 { color: #1F3864; margin-top: 26px; }
+        h4 { color: #1F3864; margin-top: 18px; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background: #4B277A; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .alert-tip { background: #E8F4FD; border-left: 4px solid #1F77B4; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+        .alert-warning { background: #FFF8E1; border-left: 4px solid #D9822A; padding: 12px 16px; margin: 16px 0; border-radius: 4px; }
+        code { background: #F5F5F5; padding: 2px 6px; border-radius: 3px; font-size: 13px; font-family: ui-monospace, monospace; }
+        pre { background: #F5F5F5; padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 13px; font-family: ui-monospace, monospace; }
+        .toc { background: #F5F5F5; padding: 16px 24px; border-radius: 4px; margin: 20px 0; }
+        .toc ul { margin: 0; padding-left: 22px; }
+        .toc li { margin: 4px 0; }
+        .stage-flow { background: #F5F5F5; padding: 20px; border-radius: 4px; text-align: center; font-family: ui-monospace, monospace; margin: 20px 0; }
+        .role-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-weight: 600; font-size: 12px; }
+        .role-none { background: #ECECEC; color: #666; }
+        .role-cmte { background: #DEE6F2; color: #1F3864; }
+        .role-chair { background: #FFE0B2; color: #C46A00; }
+        .role-admin { background: #F8D7DA; color: #B02A37; }
+        .sev-high { color: #C0392B; font-weight: 600; }
+        .sev-medium { color: #D9822A; font-weight: 600; }
+        .sev-low { color: #1F77B4; font-weight: 600; }
+        .sev-info { color: #595959; font-weight: 600; }
+        .print-only { display: none; }
+        @media print { body { max-width: none; margin: 0; padding: 0; } .toc { page-break-after: always; } }
+    </style>
+</head>
+<body>
+
+<h1>Investigation Committee Guide</h1>
+<p style="font-size: 17px; color: #595959;">
+A practical walkthrough of how membership-applicant background investigations work
+in this tool, who does what, and why the steps are designed the way they are.
+</p>
+
+<div class="alert-tip">
+    <strong>Five-minute version:</strong> read the <a href="#overview">Overview</a>,
+    <a href="#roles">Roles</a>, and <a href="#workflow">One Investigation Start to Finish</a> sections.
+    Skip the rest until you need it.
+</div>
+
+<div class="toc">
+    <strong>Contents</strong>
+    <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#roles">Roles &amp; Permissions</a></li>
+        <li><a href="#stages">Application Stages</a></li>
+        <li><a href="#workflow">One Investigation Start to Finish</a></li>
+        <li><a href="#sections">Workspace Sections Explained</a></li>
+        <li><a href="#sources">Background Check Sources Explained</a></li>
+        <li><a href="#crosscheck">Cross-Check Engine</a></li>
+        <li><a href="#approve-deny">Approve vs Deny Decision</a></li>
+        <li><a href="#fcra">FCRA Compliance Reminders</a></li>
+        <li><a href="#reports">Reports</a></li>
+        <li><a href="#faq">Common Questions</a></li>
+        <li><a href="#glossary">Glossary</a></li>
+    </ul>
+</div>
+
+<h2 id="overview">Overview</h2>
+<p>
+This Odoo application gives the Investigation Committee a structured way to vet new
+membership applicants. It plugs into the existing <strong>elkscontacts</strong>
+membership-application workflow — your committee doesn't operate in a separate tool;
+the workspace lives on the application record itself.
+</p>
+
+<h3>What the tool does</h3>
+<ul>
+    <li>Pulls the applicant's identity and history straight off the Membership Application — no re-typing.</li>
+    <li>Pre-populates a checklist of background-check sources based on every state the applicant disclosed living or working in.</li>
+    <li>Automatically screens the applicant against the federal OFAC sanctions list.</li>
+    <li>Lets the investigator open each portal in their browser, do the search by hand, and record what they find.</li>
+    <li>Cross-checks captured findings against the applicant's identity to surface inconsistencies.</li>
+    <li>Produces a one-page summary report and a detailed report.</li>
+</ul>
+
+<h3>What the tool does <em>not</em> do</h3>
+<p>
+It does not scrape state court portals or other government sites. Those terms of service
+forbid automated access, and producing fully automated consumer reports for membership
+eligibility would turn the Lodge into a "consumer reporting agency" under the federal
+Fair Credit Reporting Act. Only OFAC's published CSV is fully automated, because Treasury
+distributes it for exactly this purpose.
+</p>
+<p>
+It also does not make the membership decision. It produces a recommendation; the Lodge votes.
+</p>
+
+<h2 id="roles">Roles &amp; Permissions</h2>
+<p>
+Investigation roles live in the <strong>Productivity</strong> section of each user's
+Access Rights tab, as a row labeled <strong>Elks Investigation Committee</strong>.
+Four levels:
+</p>
+<table>
+    <tr>
+        <th>Level</th>
+        <th>Sees</th>
+        <th>Can do</th>
+    </tr>
+    <tr>
+        <td><span class="role-badge role-none">No permission</span></td>
+        <td>Nothing investigation-related</td>
+        <td>Default for regular Lodge members</td>
+    </tr>
+    <tr>
+        <td><span class="role-badge role-cmte">Committee Member</span></td>
+        <td>Own + unassigned investigations only</td>
+        <td>Claim unassigned cases, work assigned ones, capture findings, submit Approve / Deny</td>
+    </tr>
+    <tr>
+        <td><span class="role-badge role-chair">Chairman</span></td>
+        <td>All investigations including past ones</td>
+        <td>Everything a Committee Member can, plus reassign cases and override recommendations</td>
+    </tr>
+    <tr>
+        <td><span class="role-badge role-admin">Administration</span></td>
+        <td>Everything Chairman can see, plus Secretary backup</td>
+        <td>Manage portal directory, manage user roles, override committee decisions</td>
+    </tr>
+</table>
+
+<p>The roles auto-assign from Lodge state:</p>
+<ul>
+    <li>Members of the <strong>Investigation</strong> committee in <code>elks.committee</code> → Committee Member</li>
+    <li>The Investigation committee's <strong>chair</strong> → Chairman</li>
+    <li>The current <strong>Exalted Ruler</strong> + anyone holding <strong>Lodge Secretary</strong> → Administration</li>
+</ul>
+<p>
+A nightly cron reconciles, plus model hooks fire immediately when committee
+composition or the ER changes. You can also manually grant any role on the user form,
+or click <strong>Investigations → Configuration → Sync Roles Now</strong> to force a reconcile.
+</p>
+
+<h2 id="stages">Application Stages</h2>
+<p>A Membership Application moves through these stages — the investigation work happens in stage 2:</p>
+
+<div class="stage-flow">
+Proposed → <strong>Under Investigation</strong> → Balloting → Elected → Initiated<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rejected or Withdrawn
+</div>
+
+<table>
+    <tr>
+        <th>Stage</th>
+        <th>What happens</th>
+    </tr>
+    <tr>
+        <td><strong>1. Proposed</strong></td>
+        <td>A current member proposes the applicant. The form captures name, address, sponsorship, attestations. Chair clicks <em>Start Investigation</em> to advance.</td>
+    </tr>
+    <tr>
+        <td><strong>2. Under Investigation</strong></td>
+        <td>The Committee verifies info, runs background checks across every state in the applicant's history, decides Approve or Deny. Investigator's recommendation advances to Balloting.</td>
+    </tr>
+    <tr>
+        <td><strong>3. Balloting</strong></td>
+        <td>The Lodge votes. Approve / Deny recommendation and investigator's notes are visible to voters.</td>
+    </tr>
+    <tr>
+        <td><strong>4. Elected</strong></td>
+        <td>The ballot passed. Applicant is elected but hasn't been initiated yet.</td>
+    </tr>
+    <tr>
+        <td><strong>5. Initiated</strong></td>
+        <td>Applicant attends the ceremony and becomes a full member. Linked contact is flagged as a member.</td>
+    </tr>
+    <tr>
+        <td><strong>Off-ramps</strong></td>
+        <td>Rejected (ballot failed or chair rejected) and Withdrawn (applicant withdrew, or Lodge withdrew).</td>
+    </tr>
+</table>
+
+<h2 id="workflow">One Investigation Start to Finish</h2>
+
+<h3>1. The chair starts the investigation</h3>
+<p>
+Chair opens the Proposed application and clicks <strong>Start Investigation</strong> in
+the header. This advances the stage to <em>Under Investigation</em>, stamps the
+assignment date, and auto-creates one Check record for every portal that applies to
+the applicant's jurisdictions — nationwide sources (OFAC, NSOPW, CourtListener, plus
+identity sites) and state portals for every state in the applicant's history.
+</p>
+
+<h3>2. A committee member claims it</h3>
+<p>
+Open the application. A blue <strong>Claim This Investigation</strong> button appears
+in the header for unassigned cases. Click it — you become the assigned investigator,
+the assignment date stamps, and the application disappears from other committee
+members' inboxes (the record rule restricts visibility to "own + unassigned").
+</p>
+
+<h3>3. Fill in the supplemental info</h3>
+<p>The proposal form captured the current address but not the 10-year history. Add:</p>
+<ul>
+    <li><strong>Aliases / former names</strong> — maiden names, prior legal names, nicknames used legally</li>
+    <li><strong>Driver's license #</strong> and <strong>last 4 SSN</strong> (for identity disambiguation only)</li>
+    <li><strong>Residential history</strong> — every address for the past 10 years, with state codes (this is what drives the per-state portal seeding)</li>
+    <li><strong>Employment history</strong> — past 10 years</li>
+    <li><strong>References to contact</strong> — three or more non-related references</li>
+</ul>
+<p>
+Adding new states triggers the <strong>Refresh Checks from Directory</strong> button
+to optionally seed additional portals.
+</p>
+
+<h3>4. Run the automated OFAC screen</h3>
+<p>
+In the header, click <strong>Run OFAC Screen</strong>. The module downloads the
+official Treasury Specially Designated Nationals CSV (~5.5 MB, ~7,500 individuals,
+cached 24 hours), searches it against the applicant's name + aliases + maiden name
+using fuzzy matching, and records the result.
+</p>
+<p>
+No operator interaction is needed unless there's a match. If there is, the operator
+confirms whether to record it as a Hit.
+</p>
+
+<h3>5. Work the per-jurisdiction checks</h3>
+<p>For each Check row in the Background Checks section:</p>
+<ul>
+    <li>Click <strong>Open Portal</strong> to launch the official site in a new tab.</li>
+    <li>Note the portal hint (some have quirks — Washington has a Disclaimer modal, Idaho uses Smart Search format).</li>
+    <li>Do the search on the portal.</li>
+    <li>Back in the workspace: click <strong>No records</strong> if clean, or open the row and capture Hit records if matches came back.</li>
+</ul>
+
+<div class="alert-tip">
+    <strong>Pro tip — bulk paste.</strong> For portals returning many results
+    (Washington Person Search can return dozens for common names), use
+    <strong>Paste &amp; Parse Bulk Results</strong>. Paste the result block from the
+    portal page; the wizard extracts one Hit row per record with court, role, case
+    number, and date filled in automatically.
+</div>
+
+<h3>6. Contact references</h3>
+<p>Phone each reference and record:</p>
+<ul>
+    <li>Date contacted</li>
+    <li>Recommendation: FOR / AGAINST / NEUTRAL / NO RESPONSE</li>
+    <li>A quote or summary notes</li>
+</ul>
+
+<h3>7. Run cross-check</h3>
+<p>
+Click <strong>Run Cross-Check</strong> in the header. The engine looks at all
+captured Hits + applicant data and surfaces anomalies in the Cross-Check Flags
+section. See <a href="#crosscheck">the Cross-Check Engine section</a> for what
+each severity means.
+</p>
+
+<h3>8. Submit Approve or Deny</h3>
+<p>
+When the investigation is complete, click <strong>Submit: APPROVE → Balloting</strong>
+or <strong>Submit: DENY</strong>. Both move the application to Balloting; the
+investigator's recommendation is captured on the record.
+</p>
+
+<div class="alert-warning">
+    <strong>Deny requires a written reason.</strong> The <strong>Denial Reason</strong>
+    field below the workspace must be filled in before Submit: DENY will succeed.
+    The reason goes on the report and may be required for FCRA adverse-action notice
+    if a third-party screening service informed the decision.
+</div>
+
+<h2 id="sections">Workspace Sections Explained</h2>
+<table>
+    <tr>
+        <th>Section</th>
+        <th>What it's for</th>
+    </tr>
+    <tr>
+        <td><strong>Assignment</strong></td>
+        <td>Who's investigating, when they were assigned and finished, what they recommended. Read-only except for the investigator (and chair, who can reassign).</td>
+    </tr>
+    <tr>
+        <td><strong>Workspace overview</strong></td>
+        <td>At-a-glance counts: checks total, checks pending, hits captured, flags raised. Plus states in applicant history.</td>
+    </tr>
+    <tr>
+        <td><strong>Identity supplements</strong></td>
+        <td>Aliases, last-4 SSN, driver's license. Collected during investigation; not on the proposal form.</td>
+    </tr>
+    <tr>
+        <td><strong>Residential history</strong></td>
+        <td>Every address for the past 10 years. State codes here drive the per-state portal seeding.</td>
+    </tr>
+    <tr>
+        <td><strong>Employment history</strong></td>
+        <td>Past 10 years of employers. Also drives state seeding.</td>
+    </tr>
+    <tr>
+        <td><strong>References to contact</strong></td>
+        <td>Personal references the investigator phones. Track call date, recommendation, notes.</td>
+    </tr>
+    <tr>
+        <td><strong>Background Checks</strong></td>
+        <td>The per-jurisdiction worklist. Open Portal launches the search; Paste &amp; Parse captures multiple findings at once. Colored by status.</td>
+    </tr>
+    <tr>
+        <td><strong>Cross-Check Flags</strong></td>
+        <td>Anomalies the engine surfaces. Severity-graded HIGH / MEDIUM / LOW / INFO. Address HIGH before submitting.</td>
+    </tr>
+    <tr>
+        <td><strong>Investigator notes</strong></td>
+        <td>Free-form notes for the chair. Anything that doesn't fit elsewhere.</td>
+    </tr>
+    <tr>
+        <td><strong>Denial reason</strong></td>
+        <td>Required if Submit: DENY. Clear, factual basis. Goes on the report.</td>
+    </tr>
+</table>
+
+<h2 id="sources">Background Check Sources Explained</h2>
+
+<h3>Nationwide</h3>
+<table>
+    <tr><th>Source</th><th>Shows</th><th>Cost</th><th>Notes</th></tr>
+    <tr>
+        <td><strong>OFAC SDN</strong></td>
+        <td>US Treasury sanctioned individuals</td>
+        <td>Free, automated</td>
+        <td>Run once per applicant; ~7,500 entries</td>
+    </tr>
+    <tr>
+        <td><strong>NSOPW</strong></td>
+        <td>National Sex Offender Public Website</td>
+        <td>Free</td>
+        <td>All 50 states + DC + territories + tribal at once</td>
+    </tr>
+    <tr>
+        <td><strong>CourtListener</strong></td>
+        <td>Federal court records (PACER cases)</td>
+        <td>Free</td>
+        <td>By Free Law Project</td>
+    </tr>
+    <tr>
+        <td><strong>PACER</strong></td>
+        <td>Federal Case Locator</td>
+        <td>$30 setup + per-page fees</td>
+        <td>Usually skip — CourtListener covers most of the same data free</td>
+    </tr>
+    <tr>
+        <td><strong>BlackBookOnline</strong></td>
+        <td>Aggregator of public records links</td>
+        <td>Free</td>
+        <td>Identity verification only, not criminal screening</td>
+    </tr>
+    <tr>
+        <td><strong>Anywho</strong></td>
+        <td>Phone directory and reverse address</td>
+        <td>Free</td>
+        <td>Verify the disclosed phone number matches</td>
+    </tr>
+    <tr>
+        <td><strong>Facebook / Instagram / X / LinkedIn</strong></td>
+        <td>Public social media profiles</td>
+        <td>Free</td>
+        <td>Public posts only — do not friend-request</td>
+    </tr>
+</table>
+
+<h3>Per-state</h3>
+<p>Each state in the applicant's history adds:</p>
+<ul>
+    <li>Statewide court portal (civil and criminal case search)</li>
+    <li>State sex offender registry</li>
+    <li>State Department of Correction inmate search</li>
+    <li>Statewide criminal history (where available)</li>
+</ul>
+
+<h3>Local (county recorder)</h3>
+<p>
+For applicants who lived in specific counties, the directory also includes county
+recorder offices (King County LandmarkWeb, Pierce, Snohomish, Spokane, Nez Perce, etc.)
+for property ownership, liens, marriage records, UCC filings, and recorded judgments.
+Useful for identity verification and financial-reliability flags rather than criminal screening.
+</p>
+
+<h2 id="crosscheck">Cross-Check Engine</h2>
+<p>
+The engine runs every time you click <strong>Run Cross-Check</strong> and automatically
+before Submit. Severity levels:
+</p>
+
+<table>
+    <tr><th>Severity</th><th>What it flags</th></tr>
+    <tr>
+        <td><span class="sev-high">HIGH</span></td>
+        <td>
+            <ul>
+                <li>State in applicant's history wasn't checked</li>
+                <li>Hit's DOB doesn't match applicant's DOB → likely a different person</li>
+            </ul>
+            <strong>Address these before recommending.</strong>
+        </td>
+    </tr>
+    <tr>
+        <td><span class="sev-medium">MEDIUM</span></td>
+        <td>
+            <ul>
+                <li>Required nationwide source (NSOPW / OFAC / CourtListener) not yet completed</li>
+                <li>Hit name has low similarity to applicant (&lt;70%)</li>
+                <li>Hit address not in applicant's disclosed history</li>
+                <li>Hit court is in a county the applicant didn't disclose</li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td><span class="sev-low">LOW</span></td>
+        <td>DOB close but not exact (could be transcription error)</td>
+    </tr>
+    <tr>
+        <td><span class="sev-info">INFO</span></td>
+        <td>
+            <ul>
+                <li>Captured hit has no recorded disposition (look it up before scoring)</li>
+                <li>Applicant appears as Plaintiff or Petitioner (exculpatory context; usually not concerning)</li>
+            </ul>
+        </td>
+    </tr>
+</table>
+
+<h2 id="approve-deny">Approve vs Deny Decision</h2>
+
+<h3>Approve</h3>
+<p>
+Use when the investigation surfaces no disqualifying findings and the applicant's
+identity and history check out. The Lodge will likely vote yes.
+</p>
+
+<h3>Deny</h3>
+<p>
+Use when the investigation surfaces material concerns: undisclosed criminal history,
+identity inconsistencies the applicant can't explain, references who declined to vouch,
+or anything else that meaningfully bears on whether the applicant is "socially and
+fraternally acceptable" (per the Elks manual).
+</p>
+<p>
+The Lodge still votes after a Deny recommendation. The investigator's "no" appears
+on the ballot record. The Lodge can vote yes anyway — the Lodge has final say.
+</p>
+
+<div class="alert-warning">
+    <strong>Why don't we auto-reject on Deny?</strong>
+    Two reasons: (1) membership is a Lodge prerogative, not a single investigator's
+    decision; (2) auto-rejection without a vote could create FCRA adverse-action issues
+    if a third-party screening service informed the decision.
+</div>
+
+<h2 id="fcra">FCRA Compliance Reminders</h2>
+<p>
+The Fair Credit Reporting Act applies whenever a Lodge uses information from a
+<strong>third-party consumer reporting agency</strong> (Checkr, Sterling, GoodHire, etc.)
+to make a membership-eligibility decision. It does <em>not</em> apply when the
+committee gathers information directly from public-government records (state courts,
+NSOPW, etc.) or from the applicant's own disclosure.
+</p>
+<p>If the decision is <strong>Deny</strong> and was informed by a third-party consumer report:</p>
+<ol>
+    <li><strong>Pre-adverse-action notice</strong> — give the applicant a copy of the report, a copy of the FTC "Summary of Your Rights Under the FCRA," and a reasonable time (typically 5 business days) to dispute its accuracy.</li>
+    <li><strong>Final adverse-action notice</strong> — if the decision stands, identify the consumer reporting agency (name, address, phone) and tell the applicant of their right to a free copy of the report within 60 days and to dispute its accuracy directly with the agency.</li>
+</ol>
+<p>The detailed report includes a Section 8 with this procedure restated as a reminder.</p>
+
+<h2 id="reports">Reports</h2>
+<table>
+    <tr>
+        <th>Report</th>
+        <th>Contents</th>
+        <th>When to use</th>
+    </tr>
+    <tr>
+        <td><strong>Summary (1 page)</strong></td>
+        <td>Coverage strip, jurisdictions checked, HIGH and MEDIUM flags, recommendation + reason, sign-off line</td>
+        <td>Standard committee deliverable to the ER</td>
+    </tr>
+    <tr>
+        <td><strong>Detailed Report</strong></td>
+        <td>Full per-jurisdiction findings, all captured hits, every cross-check flag, full disclosures, FCRA adverse-action procedure</td>
+        <td>For the Lodge file and if anyone questions the investigation later</td>
+    </tr>
+    <tr>
+        <td><strong>Word (.docx)</strong></td>
+        <td>Same as Detailed, but editable</td>
+        <td>If you want to add commentary or merge into a larger document</td>
+    </tr>
+</table>
+
+<h2 id="faq">Common Questions</h2>
+<dl>
+    <dt><strong>Why am I not seeing the Investigations menu?</strong></dt>
+    <dd>Your user account doesn't have any Investigation role yet. Ask the chair to grant Committee Member from the Productivity section of your Access Rights tab, or to add you to the Investigation committee in the elks.committee record. Auto-syncs nightly; force from Configuration → Sync Roles Now.</dd>
+
+    <dt><strong>Why doesn't anything appear in My Investigations?</strong></dt>
+    <dd>The list only shows applications in Under Investigation. If everything is Proposed, ask the chair to start an investigation first. Also, Committee Members only see own + unassigned — if all active investigations are assigned to others, your inbox is empty.</dd>
+
+    <dt><strong>Can I unclaim an investigation?</strong></dt>
+    <dd>Yes — clear the <em>Investigator</em> field in the Assignment section and save. The investigation goes back to unassigned.</dd>
+
+    <dt><strong>What if I find something during the investigation that the chair needs to know now?</strong></dt>
+    <dd>Use the chatter at the bottom of the application — @mention the chair. They get a notification.</dd>
+
+    <dt><strong>How long should an investigation take?</strong></dt>
+    <dd>No hard rule, but most should finish in under a week. The bottleneck is usually reaching references by phone.</dd>
+
+    <dt><strong>Can multiple committee members work the same investigation?</strong></dt>
+    <dd>No — only the assigned investigator can submit a recommendation. But you can collaborate by leaving comments in the chatter.</dd>
+
+    <dt><strong>What if I'm not sure whether to Approve or Deny?</strong></dt>
+    <dd>Use the <em>Investigator Notes</em> field to write up your uncertainty and flag it for the chair before submitting. The chair can reassign or extend the investigation.</dd>
+</dl>
+
+<h2 id="glossary">Glossary</h2>
+<dl>
+    <dt><strong>Application</strong></dt><dd>The Membership Application record (<code>elks.membership.application</code>). The investigation lives on this record.</dd>
+    <dt><strong>Background Check</strong></dt><dd>One row in the Background Checks section; represents one portal lookup.</dd>
+    <dt><strong>Cross-Check Flag</strong></dt><dd>A single anomaly raised by the cross-check engine.</dd>
+    <dt><strong>Hit</strong></dt><dd>A record captured from a portal search (court case, sex-offender entry, sanctions match).</dd>
+    <dt><strong>Investigator</strong></dt><dd>The committee member assigned to a specific investigation.</dd>
+    <dt><strong>OFAC SDN</strong></dt><dd>Office of Foreign Assets Control Specially Designated Nationals list.</dd>
+    <dt><strong>NSOPW</strong></dt><dd>National Sex Offender Public Website (nsopw.gov).</dd>
+    <dt><strong>Portal</strong></dt><dd>One of the records-search websites in the Background-Check Portal Directory.</dd>
+    <dt><strong>CRA</strong></dt><dd>Consumer Reporting Agency. Third-party paid screening services like Checkr.</dd>
+    <dt><strong>FCRA</strong></dt><dd>Fair Credit Reporting Act. Federal law governing CRAs.</dd>
+    <dt><strong>Adverse action</strong></dt><dd>The FCRA two-step notice procedure required when denying based on a CRA report.</dd>
+</dl>
+
+<hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
+<p style="text-align: center; color: #999; font-size: 13px;">
+    Elks Investigation Workspace · For internal Lodge use only
+</p>
+
+</body>
+</html>

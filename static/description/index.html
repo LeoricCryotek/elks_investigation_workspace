@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+</head>
+<body>
+    <section class="oe_container" style="background-color:#4B277A; color:white; padding:60px 0; text-align:center;">
+        <div class="oe_row" style="max-width:1100px; margin:0 auto;">
+            <h1 style="font-size:48px; margin-bottom:20px;">Elks Investigation Workspace</h1>
+            <h3 style="font-weight:300; opacity:0.9;">
+                FCRA-aware membership-applicant background investigations
+                for Elks Lodges, built on top of <em>elkscontacts</em>.
+            </h3>
+        </div>
+    </section>
+
+    <section class="oe_container" style="padding:40px 0; max-width:1100px; margin:0 auto;">
+        <h2 style="color:#4B277A;">What you get</h2>
+        <div class="oe_row" style="display:flex; flex-wrap:wrap; gap:24px; margin-top:24px;">
+            <div style="flex:1; min-width:280px;">
+                <h4>📋 Ticket-style worklist</h4>
+                <p>Each committee member opens "My Investigations" and sees applications assigned to them, plus any unassigned ones they can claim. First-click claim, no chair-staging needed.</p>
+            </div>
+            <div style="flex:1; min-width:280px;">
+                <h4>🔍 One-screen workspace</h4>
+                <p>10-year residential and employment history, references, per-jurisdiction background checks, and a cross-check engine — all on one tab inside the existing Membership Application form.</p>
+            </div>
+            <div style="flex:1; min-width:280px;">
+                <h4>⚡ Automated OFAC SDN screen</h4>
+                <p>Downloads the official Treasury Specially Designated Nationals CSV and searches ~7,500 listed individuals locally against the applicant name + aliases. Zero operator effort on clean matches.</p>
+            </div>
+        </div>
+
+        <div class="oe_row" style="display:flex; flex-wrap:wrap; gap:24px; margin-top:24px;">
+            <div style="flex:1; min-width:280px;">
+                <h4>📑 Bulk paste-and-parse</h4>
+                <p>Operator pastes the result block from any court portal — wizard extracts one Hit row per record with court, role (Defendant/Plaintiff/Respondent/Judgment Debtor), case #, and date. Works on WA, ID iCourt, and most tabular portal copy-pastes.</p>
+            </div>
+            <div style="flex:1; min-width:280px;">
+                <h4>🚦 Cross-check engine</h4>
+                <p>Automatically flags state-coverage gaps, name/DOB mismatches, county-mismatch when the applicant didn't disclose presence there, and demotes Plaintiff hits to context. Severity-graded HIGH / MEDIUM / LOW / INFO.</p>
+            </div>
+            <div style="flex:1; min-width:280px;">
+                <h4>📄 Two report formats</h4>
+                <p>1-page summary report (PDF) as default — colored coverage strip, jurisdictions checked, high-severity flags only, sign-off line. Multi-page detailed report and Word (.docx) available too.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="oe_container" style="background:#F5F5F5; padding:40px 0;">
+        <div style="max-width:1100px; margin:0 auto;">
+            <h2 style="color:#4B277A;">Roles &amp; permissions</h2>
+            <p>Two new roles in the <em>Elks Lodge</em> privilege block:</p>
+            <table style="width:100%; margin-top:16px; border-collapse:collapse;">
+                <tr style="background:#4B277A; color:white;">
+                    <th style="padding:12px; text-align:left;">Role</th>
+                    <th style="padding:12px; text-align:left;">Can do</th>
+                </tr>
+                <tr style="border-bottom:1px solid #ddd;">
+                    <td style="padding:12px; vertical-align:top;"><strong>Investigation Committee Member</strong></td>
+                    <td style="padding:12px;">Claim unassigned investigations, work assigned ones, capture findings, submit ACCEPT/DENY recommendations. Restricted by record rule: can only see <em>own + unassigned</em> active investigations.</td>
+                </tr>
+                <tr style="border-bottom:1px solid #ddd;">
+                    <td style="padding:12px; vertical-align:top;"><strong>Investigation Chairman</strong></td>
+                    <td style="padding:12px;">Secretary-equivalent. Sees all investigations, manages the Portal Directory, overrides assignments and recommendations.</td>
+                </tr>
+                <tr>
+                    <td style="padding:12px; vertical-align:top;"><strong>Lodge Secretary</strong> (existing)</td>
+                    <td style="padding:12px;">Backup access — Secretary already has full write/create on all investigation models so the workflow keeps moving even when committee members aren't around.</td>
+                </tr>
+            </table>
+            <p style="margin-top:16px;">Manage assignments from <strong>Investigations → Configuration → User Roles &amp; Permissions</strong>.</p>
+        </div>
+    </section>
+
+    <section class="oe_container" style="padding:40px 0; max-width:1100px; margin:0 auto;">
+        <h2 style="color:#4B277A;">What this module does NOT do</h2>
+        <p>It does not scrape state court portals, NSOPW, or other government records sites. Those sites' terms of service prohibit automated access, and producing fully automated consumer reports for membership-eligibility decisions would turn the Lodge into a "consumer reporting agency" under the federal Fair Credit Reporting Act. Only OFAC's published CSV is fully automated, because Treasury distributes it specifically for this purpose.</p>
+        <p>For paid, FCRA-compliant fully-automated nationwide screening, the recommended path is a licensed Consumer Reporting Agency (Checkr, Sterling, GoodHire, etc.). A CRA-supplied report can be transcribed into this tool's per-jurisdiction prompts.</p>
+    </section>
+</body>
+</html>

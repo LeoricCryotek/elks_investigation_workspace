@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ============= NATIONWIDE / FEDERAL ============= -->
+        <record id="portal_nat_nsopw" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">NSOPW</field>
+            <field name="source_label">National Sex Offender Public Website (all 50 states + DC + territories + tribal)</field>
+            <field name="url">https://www.nsopw.gov/search-public-sex-offender-registries</field>
+            <field name="source_type">sex_offender</field>
+            <field name="hint">NSOPW uses SEPARATE First Name and Last Name fields. Use the big "SEARCH BY NAME" panel — not the small site-search at the top of the page.</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="portal_nat_ofac" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">OFAC SDN</field>
+            <field name="source_label">OFAC Specially Designated Nationals — automated screen</field>
+            <field name="url">https://sanctionssearch.ofac.treas.gov/</field>
+            <field name="source_type">sanctions</field>
+            <field name="hint">Automated: the "Run OFAC Screen" button downloads the official Treasury CSV and searches locally.</field>
+            <field name="is_automated" eval="True"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="portal_nat_courtlistener" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">CourtListener</field>
+            <field name="source_label">Federal court records — Free Law Project (free, covers PACER cases)</field>
+            <field name="url">https://www.courtlistener.com/?type=r</field>
+            <field name="source_type">federal_court</field>
+            <field name="hint">Free alternative to PACER. Type applicant's name in the search box at top.</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="portal_nat_pacer" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">PACER</field>
+            <field name="source_label">Federal Case Locator (PAID PACER ACCOUNT REQUIRED — usually skip)</field>
+            <field name="url">https://pcl.uscourts.gov/pcl/index.jsf</field>
+            <field name="source_type">federal_court</field>
+            <field name="hint">Most lodges should skip. Use CourtListener (above) for federal cases instead.</field>
+            <field name="sequence">40</field>
+            <field name="active" eval="False"/>
+        </record>
+        <record id="portal_nat_blackbook" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">BlackBookOnline</field>
+            <field name="source_label">BlackBookOnline.info — links aggregator for public records (FREE)</field>
+            <field name="url">https://www.blackbookonline.info/</field>
+            <field name="source_type">identity</field>
+            <field name="hint">Identity verification only. Use to confirm disclosed addresses match what's publicly known.</field>
+            <field name="sequence">50</field>
+        </record>
+        <record id="portal_nat_anywho" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">Anywho</field>
+            <field name="source_label">Anywho.com — phone directory / reverse-address</field>
+            <field name="url">https://www.anywho.com/</field>
+            <field name="source_type">identity</field>
+            <field name="hint">Identity verification only — confirm disclosed phone number matches.</field>
+            <field name="sequence">60</field>
+        </record>
+        <record id="portal_nat_facebook" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">Facebook</field>
+            <field name="source_label">Facebook — public profile review</field>
+            <field name="url">https://www.facebook.com/public/</field>
+            <field name="source_type">social_media</field>
+            <field name="hint">PUBLIC POSTS ONLY. Do not friend-request to see private content (Elks manual: 'examining... other confidential information is totally out of bounds'). Screenshot anything material with the date.</field>
+            <field name="sequence">70</field>
+        </record>
+        <record id="portal_nat_instagram" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">Instagram</field>
+            <field name="source_label">Instagram — public profile review</field>
+            <field name="url">https://www.instagram.com/</field>
+            <field name="source_type">social_media</field>
+            <field name="hint">Public profile only. The Elks manual notes 'maturity can make significant changes in a person's life' when weighing older posts.</field>
+            <field name="sequence">80</field>
+        </record>
+        <record id="portal_nat_x" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">X-Twitter</field>
+            <field name="source_label">X (Twitter) — public profile / search</field>
+            <field name="url">https://x.com/search-home</field>
+            <field name="source_type">social_media</field>
+            <field name="sequence">90</field>
+        </record>
+        <record id="portal_nat_linkedin" model="elks.portal">
+            <field name="jurisdiction_code">NATIONAL</field>
+            <field name="source_code">LinkedIn</field>
+            <field name="source_label">LinkedIn — employment verification</field>
+            <field name="url">https://www.linkedin.com/search/results/all/</field>
+            <field name="source_type">social_media</field>
+            <field name="hint">Useful for verifying disclosed employment history. View public profile only.</field>
+            <field name="sequence">100</field>
+        </record>
+
+        <!-- ============= IDAHO (Lewiston #896 home state) ============= -->
+        <record id="portal_id_court" model="elks.portal">
+            <field name="jurisdiction_code">ID</field>
+            <field name="source_code">Court</field>
+            <field name="source_label">Idaho iCourt Portal (Tyler Odyssey — all 44 counties, 1995–present)</field>
+            <field name="url">https://portal-idaho.tylertech.cloud/odysseyportal/Home/Dashboard/29</field>
+            <field name="source_type">court</field>
+            <field name="hint">Single combined search box. Format: 'Last, First Middle Suffix'. Use 'Advanced Filtering Options' to filter by date range or case type.</field>
+        </record>
+        <record id="portal_id_bci" model="elks.portal">
+            <field name="jurisdiction_code">ID</field>
+            <field name="source_code">ISP-BCI</field>
+            <field name="source_label">Idaho State Police Bureau of Criminal Identification (name-based check)</field>
+            <field name="url">https://isp.idaho.gov/bci/criminal-history/</field>
+            <field name="source_type">court</field>
+            <field name="hint">Request form / fee-based. Returns by mail or email — not an instant lookup.</field>
+        </record>
+        <record id="portal_id_sor" model="elks.portal">
+            <field name="jurisdiction_code">ID</field>
+            <field name="source_code">SOR</field>
+            <field name="source_label">Idaho Sex Offender Registry</field>
+            <field name="url">https://apps.isp.idaho.gov/sor_id/</field>
+            <field name="source_type">sex_offender</field>
+        </record>
+        <record id="portal_id_doc" model="elks.portal">
+            <field name="jurisdiction_code">ID</field>
+            <field name="source_code">DOC</field>
+            <field name="source_label">Idaho Department of Correction offender search</field>
+            <field name="url">https://www.idoc.idaho.gov/content/offender_search/</field>
+            <field name="source_type">corrections</field>
+        </record>
+        <record id="portal_id_nez_perce_recorder" model="elks.portal">
+            <field name="jurisdiction_code">ID</field>
+            <field name="source_code">NezPerce-Recorder</field>
+            <field name="source_label">Nez Perce County Recorder — Recorded Documents (Lewiston home county)</field>
+            <field name="url">https://www.co.nezperce.id.us/clerk/recorder</field>
+            <field name="source_type">recorder</field>
+            <field name="hint">Local recorder for Lewiston / Nez Perce County. Most local applicants will have property/liens here. Search is offline / clerk-staffed at most counties in Idaho — call ahead if a name turns up nothing online.</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- ============= WASHINGTON (neighbor; Clarkston is across the river) ============= -->
+        <record id="portal_wa_court" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">Court</field>
+            <field name="source_label">Washington Courts — Person Search (deep-link bypasses Disclaimer)</field>
+            <field name="url">https://dw.courts.wa.gov/index.cfm?fa=home.namesearch&amp;terms=accept&amp;flashform=0</field>
+            <field name="source_type">court</field>
+            <field name="hint">Goes directly to Person Search; Disclaimer is auto-accepted via 'terms=accept' query param.</field>
+        </record>
+        <record id="portal_wa_watch" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">WATCH</field>
+            <field name="source_label">WSP WATCH — name-based criminal history</field>
+            <field name="url">https://watch.wsp.wa.gov/</field>
+            <field name="source_type">court</field>
+            <field name="hint">Requires free account creation + small per-search fee (~$11). Credit card required.</field>
+        </record>
+        <record id="portal_wa_sor" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">SOR</field>
+            <field name="source_label">Washington Sex Offender Registry</field>
+            <field name="url">https://www.icrimewatch.net/index.php?AgencyID=54561</field>
+            <field name="source_type">sex_offender</field>
+        </record>
+        <record id="portal_wa_doc" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">DOC</field>
+            <field name="source_label">Washington DOC inmate search</field>
+            <field name="url">https://www.doc.wa.gov/information/inmate-search/default.aspx</field>
+            <field name="source_type">corrections</field>
+        </record>
+
+        <!-- WA county recorders — including Asotin (across the river from Lewiston) -->
+        <record id="portal_wa_asotin_recorder" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">Asotin-Recorder</field>
+            <field name="source_label">Asotin County Auditor — Recording Search (Clarkston, WA — local)</field>
+            <field name="url">https://www.co.asotin.wa.us/170/Auditors-Recording</field>
+            <field name="source_type">recorder</field>
+            <field name="hint">Asotin County (Clarkston) — directly across the river from Lewiston. Local applicants often have records here as well as in Nez Perce. Most county recorder data is still clerk-staffed; call the Auditor's office at (509) 243-2074 if a name doesn't surface online.</field>
+            <field name="sequence">48</field>
+        </record>
+        <record id="portal_wa_king_recorder" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">King-Recorder</field>
+            <field name="source_label">King County Recorder — LandmarkWeb (deeds, liens, marriage, UCC)</field>
+            <field name="url">https://recordsearch.kingcounty.gov/LandmarkWeb</field>
+            <field name="source_type">recorder</field>
+            <field name="hint">Recorder's records — NOT court cases. Useful for identity verification (property ownership at disclosed addresses), financial flags (tax liens, UCC filings, recorded judgments), and confirming spouse name from marriage licenses. Most hits here are informational unless they show liens or judgments.</field>
+            <field name="sequence">50</field>
+        </record>
+        <record id="portal_wa_pierce_recorder" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">Pierce-Recorder</field>
+            <field name="source_label">Pierce County Auditor — Recording Search</field>
+            <field name="url">https://armspublic.co.pierce.wa.us/RealEstate/SearchEntry.aspx</field>
+            <field name="source_type">recorder</field>
+            <field name="hint">Recorder's records for Pierce County (Tacoma). Same scope as King County LandmarkWeb.</field>
+            <field name="sequence">52</field>
+        </record>
+        <record id="portal_wa_snohomish_recorder" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">Snohomish-Recorder</field>
+            <field name="source_label">Snohomish County Auditor — Recording Search</field>
+            <field name="url">https://recordingsearch.snoco.org/</field>
+            <field name="source_type">recorder</field>
+            <field name="hint">Recorder's records for Snohomish County (Everett, Lynnwood).</field>
+            <field name="sequence">54</field>
+        </record>
+        <record id="portal_wa_spokane_recorder" model="elks.portal">
+            <field name="jurisdiction_code">WA</field>
+            <field name="source_code">Spokane-Recorder</field>
+            <field name="source_label">Spokane County Auditor — Recorded Documents Search</field>
+            <field name="url">https://www.spokanecounty.org/3158/Recorded-Documents-Search</field>
+            <field name="source_type">recorder</field>
+            <field name="hint">Recorder's records for Spokane County.</field>
+            <field name="sequence">56</field>
+        </record>
+
+        <!-- ============= OREGON ============= -->
+        <record id="portal_or_court" model="elks.portal">
+            <field name="jurisdiction_code">OR</field>
+            <field name="source_code">Court</field>
+            <field name="source_label">Oregon OJCIN OnLine</field>
+            <field name="url">https://publicaccess.courts.oregon.gov/</field>
+            <field name="source_type">court</field>
+        </record>
+        <record id="portal_or_sor" model="elks.portal">
+            <field name="jurisdiction_code">OR</field>
+            <field name="source_code">SOR</field>
+            <field name="source_label">Oregon Sex Offender Inquiry</field>
+            <field name="url">https://sexoffenders.oregon.gov/</field>
+            <field name="source_type">sex_offender</field>
+        </record>
+        <record id="portal_or_doc" model="elks.portal">
+            <field name="jurisdiction_code">OR</field>
+            <field name="source_code">DOC</field>
+            <field name="source_label">Oregon DOC Offender Search</field>
+            <field name="url">https://docpub.state.or.us/OOS/intro.jsf</field>
+            <field name="source_type">corrections</field>
+        </record>
+
+        <!-- ============= MONTANA ============= -->
+        <record id="portal_mt_court" model="elks.portal">
+            <field name="jurisdiction_code">MT</field>
+            <field name="source_code">Court</field>
+            <field name="source_label">Montana courts records search</field>
+            <field name="url">https://courts.mt.gov/courts/search/</field>
+            <field name="source_type">court</field>
+        </record>
+        <record id="portal_mt_svor" model="elks.portal">
+            <field name="jurisdiction_code">MT</field>
+            <field name="source_code">SVOR</field>
+            <field name="source_label">Montana Sexual or Violent Offender Registry</field>
+            <field name="url">https://doj.mt.gov/svor/</field>
+            <field name="source_type">sex_offender</field>
+        </record>
+
+        <!-- ============= CALIFORNIA / TEXAS / NEW YORK / FLORIDA ============= -->
+        <record id="portal_ca_court" model="elks.portal">
+            <field name="jurisdiction_code">CA</field>
+            <field name="source_code">Court</field>
+            <field name="source_label">California Courts (per-county online access)</field>
+            <field name="url">https://www.courts.ca.gov/find-my-court.htm</field>
+            <field name="source_type">court</field>
+            <field name="hint">California has no statewide case search — search each county the applicant lived in.</field>
+        </record>
+        <record id="portal_ca_sor" model="elks.portal">
+            <field name="jurisdiction_code">CA</field>
+            <field name="source_code">SOR</field>
+            <field name="source_label">California Megan's Law Registry</field>
+            <field name="url">https://www.meganslaw.ca.gov/</field>
+            <field name="source_type">sex_offender</field>
+        </record>
+        <record id="portal_tx_court" model="elks.portal">
+            <field name="jurisdiction_code">TX</field>
+            <field name="source_code">Court</field>
+            <field name="source_label">Texas re:SearchTX (registration required)</field>
+            <field name="url">https://research.txcourts.gov/</field>
+            <field name="source_type">court</field>
+            <field name="hint">Requires free registration before first use.</field>
+        </record>
+        <record id="portal_tx_sor" model="elks.portal">
+            <field name="jurisdiction_code">TX</field>
+            <field name="source_code">SOR</field>
+            <field name="source_label">Texas DPS Sex Offender Registry</field>
+            <field name="url">https://records.txdps.state.tx.us/SexOffender/</field>
+            <field name="source_type">sex_offender</field>
+        </record>
+        <record id="portal_ny_court" model="elks.portal">
+            <field name="jurisdiction_code">NY</field>
+            <field name="source_code">Court</field>
+            <field name="source_label">NY WebCivil / eCourts</field>
+            <field name="url">https://iapps.courts.state.ny.us/webcivilLocal/LCMain</field>
+            <field name="source_type">court</field>
+        </record>
+        <record id="portal_ny_sor" model="elks.portal">
+            <field name="jurisdiction_code">NY</field>
+            <field name="source_code">SOR</field>
+            <field name="source_label">NY DCJS Sex Offender Registry</field>
+            <field name="url">https://www.criminaljustice.ny.gov/nsor/search_index.htm</field>
+            <field name="source_type">sex_offender</field>
+        </record>
+        <record id="portal_fl_court" model="elks.portal">
+            <field name="jurisdiction_code">FL</field>
+            <field name="source_code">Court</field>
+            <field name="source_label">Florida statewide court records portal</field>
+            <field name="url">https://www.myflcourtaccess.com/</field>
+            <field name="source_type">court</field>
+        </record>
+        <record id="portal_fl_sor" model="elks.portal">
+            <field name="jurisdiction_code">FL</field>
+            <field name="source_code">SOR</field>
+            <field name="source_label">Florida FDLE Sex Offender Registry</field>
+            <field name="url">https://offender.fdle.state.fl.us/offender/sops/</field>
+            <field name="source_type">sex_offender</field>
+        </record>
+
+    </data>
+</odoo>

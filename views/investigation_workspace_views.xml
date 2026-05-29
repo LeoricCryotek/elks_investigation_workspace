@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ============================================================
+             Inherit the elks.membership.application form view:
+               * add header buttons (Claim / OFAC / Cross-Check / Accept / Deny / Reports)
+               * replace the simple "Investigation" page with the workspace tab
+             ============================================================ -->
+        <record id="view_application_form_inherit_workspace" model="ir.ui.view">
+            <field name="name">elks.membership.application.form.investigation.workspace</field>
+            <field name="model">elks.membership.application</field>
+            <field name="inherit_id" ref="elkscontacts.view_elks_membership_application_form"/>
+            <field name="arch" type="xml">
+
+                <!-- Hide the legacy "Move to Balloting" button during the
+                     investigation stage; APPROVE and DENY drive the transition
+                     instead. Still visible during 'proposed' as a chair
+                     override (skip investigation entirely). -->
+                <xpath expr="//button[@name='action_move_to_balloting']" position="attributes">
+                    <attribute name="invisible">stage != 'proposed'</attribute>
+                </xpath>
+
+                <!-- Insert investigation workflow buttons in the header
+                     (placed before the existing Reject button) -->
+                <xpath expr="//button[@name='action_reject']" position="before">
+                    <button name="action_investigation_claim"
+                            string="Claim This Investigation"
+                            type="object"
+                            class="btn-primary"
+                            invisible="not investigation_can_claim"
+                            help="The first Investigation Committee member to open an unassigned investigation claims it."/>
+                    <button name="action_investigation_seed_checks"
+                            string="Refresh Checks from Directory"
+                            type="object"
+                            invisible="stage != 'investigation'"
+                            help="Re-create pending Check records for every portal that applies to this applicant's jurisdictions. Safe to re-run after editing the address/employment history."/>
+                    <button name="action_investigation_run_ofac"
+                            string="Run OFAC Screen"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="stage != 'investigation'"/>
+                    <button name="action_investigation_run_cross_check"
+                            string="Run Cross-Check"
+                            type="object"
+                            invisible="stage != 'investigation'"/>
+                    <button name="action_investigation_accept"
+                            string="Submit: APPROVE → Balloting"
+                            type="object"
+                            class="btn-success"
+                            confirm="Submit APPROVE recommendation and move the application to Balloting?"
+                            invisible="stage != 'investigation' or investigator_id == False"/>
+                    <button name="action_investigation_deny"
+                            string="Submit: DENY"
+                            type="object"
+                            class="btn-danger"
+                            confirm="Submit DENY recommendation? The application remains in Investigation stage for chair review."
+                            invisible="stage != 'investigation' or investigator_id == False"/>
+                    <button name="action_investigation_print_summary"
+                            string="Print Summary (1 page)"
+                            type="object"
+                            invisible="stage == 'proposed'"/>
+                    <button name="action_investigation_print_pdf"
+                            string="Print Detailed Report"
+                            type="object"
+                            invisible="stage == 'proposed'"/>
+                    <button name="action_investigation_download_docx"
+                            string="Download Word (Detailed)"
+                            type="object"
+                            invisible="stage == 'proposed'"/>
+                </xpath>
+
+                <!-- Expose the technical "can claim" / "is mine" fields so the
+                     view conditions above can reference them. -->
+                <xpath expr="//field[@name='investigation_committee_member_ids']" position="after">
+                    <field name="investigation_can_claim" invisible="1"/>
+                    <field name="investigation_is_mine" invisible="1"/>
+                    <field name="investigation_pending_check_count" invisible="1"/>
+                    <field name="investigation_check_count" invisible="1"/>
+                    <field name="investigation_hit_count" invisible="1"/>
+                    <field name="investigation_flag_count" invisible="1"/>
+                    <field name="investigation_states_in_history" invisible="1"/>
+                </xpath>
+
+                <!-- Replace the simple Investigation page with the workspace -->
+                <xpath expr="//page[@name='investigation']" position="replace">
+                    <page string="Investigation Workspace" name="investigation">
+                        <field name="investigation_committee_member_ids" invisible="1"/>
+
+                        <!-- Status banner -->
+                        <group>
+                            <group string="Assignment">
+                                <field name="investigator_id" readonly="stage != 'investigation'"/>
+                                <field name="date_investigation_assigned"/>
+                                <field name="date_investigation_complete" readonly="1"/>
+                                <field name="investigation_result" readonly="1"/>
+                            </group>
+                            <group string="Workspace overview">
+                                <field name="investigation_states_in_history" readonly="1"/>
+                                <field name="investigation_check_count" readonly="1" string="# checks"/>
+                                <field name="investigation_pending_check_count" readonly="1" string="# pending"/>
+                                <field name="investigation_hit_count" readonly="1" string="# hits"/>
+                                <field name="investigation_flag_count" readonly="1" string="# flags"/>
+                            </group>
+                        </group>
+
+                        <!-- Identity supplements collected during the investigation -->
+                        <separator string="Identity Supplements"/>
+                        <p class="text-muted">
+                            Identity data collected during the investigation but not on
+                            the original application. Aliases and maiden names are fed
+                            to the OFAC screen and the cross-check engine for fuzzy name
+                            matching. The last-4 SSN is kept for identity disambiguation
+                            only (telling apart two people with the same name).
+                        </p>
+                        <group>
+                            <group>
+                                <field name="applicant_aliases"
+                                       placeholder="Comma-separated. Include maiden, nicknames used legally..."
+                                       help="Comma-separated list. Include maiden names, prior legal names, and nicknames the applicant uses legally. These are searched in the OFAC screen and used by the cross-check engine."/>
+                                <field name="applicant_drivers_license"
+                                       help="Driver's license number and issuing state. Useful when verifying identity in person."/>
+                            </group>
+                            <group>
+                                <field name="applicant_last4_ssn"
+                                       help="Last four digits of SSN for identity disambiguation only. Used by the investigator to tell apart people with the same name in court records. Not stored as authentication data."/>
+                            </group>
+                        </group>
+
+                        <!-- 10-year residence and employment histories -->
+                        <separator string="Residential History (10 years, most recent first)"/>
+                        <p class="text-muted">
+                            Every place the applicant has lived in the past decade.
+                            <strong>The state code on each row drives which state portals
+                            get auto-seeded into the Background Checks list below.</strong>
+                            Add rows as needed; click <em>Refresh Checks from Directory</em>
+                            in the header to seed portals for any newly-added states.
+                        </p>
+                        <field name="investigation_address_history_ids">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="street"/>
+                                <field name="city"/>
+                                <field name="state_id" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="state_code" readonly="1"/>
+                                <field name="date_from"/>
+                                <field name="date_to"/>
+                            </list>
+                        </field>
+
+                        <separator string="Employment History (10 years)"/>
+                        <p class="text-muted">
+                            Past 10 years of employers, self-employment, and any
+                            unemployment gaps. Also drives the per-state portal
+                            seeding — a state on an employer row counts the same as
+                            a state on a residential row. Disclosed gaps are worth
+                            noting since they're a common topic for the references
+                            you'll call.
+                        </p>
+                        <field name="investigation_employment_history_ids">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="employer"/>
+                                <field name="role"/>
+                                <field name="city"/>
+                                <field name="state_id" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="state_code" readonly="1"/>
+                                <field name="date_from"/>
+                                <field name="date_to"/>
+                            </list>
+                        </field>
+
+                        <separator string="References to contact"/>
+                        <p class="text-muted">
+                            Three or more non-related personal references from the
+                            applicant's intake form. The investigator phones each one
+                            and captures the date contacted, recommendation
+                            (FOR / AGAINST / NEUTRAL / NO RESPONSE), and a short
+                            quote or notes. This is distinct from the Proposer and
+                            Endorser captured on the application form itself.
+                        </p>
+                        <field name="investigation_reference_ids">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="name"/>
+                                <field name="relationship"/>
+                                <field name="phone"/>
+                                <field name="email"/>
+                                <field name="years_known"/>
+                                <field name="contacted_on"/>
+                                <field name="recommendation"/>
+                                <field name="notes"/>
+                            </list>
+                        </field>
+
+                        <!-- Background Checks -->
+                        <separator string="Background Checks (seeded automatically from history)"/>
+                        <p class="text-muted">
+                            One row per portal — nationwide sources plus state and county
+                            portals for every state in the applicant's history. For each
+                            row, click <strong>Open Portal</strong> to launch the official
+                            site in a new tab; do the search there. Then either click
+                            <strong>No records</strong> on the row, or open the row to
+                            capture Hits if matches came back. For portals returning many
+                            results, click into the row and use <strong>Paste &amp; Parse
+                            Bulk Results</strong> to extract Hits automatically.
+                            <br/><br/>
+                            The OFAC SDN row runs automatically when you click
+                            <strong>Run OFAC Screen</strong> at the top of the page.
+                            Row colors: green = clean, amber = match found, grey = skipped,
+                            blue = pending.
+                        </p>
+                        <field name="investigation_check_ids">
+                            <list decoration-success="result_summary == 'no_records'"
+                                  decoration-warning="result_summary in ('match_found', 'possible_match')"
+                                  decoration-muted="result_summary == 'skipped'"
+                                  decoration-info="result_summary == 'pending'">
+                                <field name="jurisdiction_code"/>
+                                <field name="source_code"/>
+                                <field name="source_label"/>
+                                <field name="result_summary"/>
+                                <field name="hit_count"/>
+                                <field name="date_checked"/>
+                                <field name="operator_id" optional="hide"/>
+                                <field name="is_automated" optional="hide"/>
+                                <field name="url" widget="url" optional="hide"/>
+                                <button name="action_open_portal" type="object"
+                                        string="Open" icon="fa-external-link"
+                                        invisible="is_automated"
+                                        help="Open this portal in a new tab. Do the search there, then record findings in this row."/>
+                                <button name="action_mark_no_records" type="object"
+                                        string="No records" icon="fa-check-circle"
+                                        invisible="result_summary != 'pending' or is_automated"/>
+                                <button name="action_mark_skipped" type="object"
+                                        string="Skip" icon="fa-step-forward"
+                                        invisible="result_summary != 'pending' or is_automated"/>
+                            </list>
+                            <form>
+                                <header>
+                                    <button name="action_open_portal" type="object"
+                                            string="Open Portal in New Tab"
+                                            class="btn-primary"
+                                            invisible="is_automated"/>
+                                    <button name="action_open_bulk_parse_wizard"
+                                            type="object"
+                                            string="Paste &amp; Parse Bulk Results"
+                                            invisible="is_automated"
+                                            help="Paste a block of search results from the portal; the wizard parses each into a Hit row."/>
+                                </header>
+                                <sheet>
+                                    <group>
+                                        <group>
+                                            <field name="jurisdiction_code"/>
+                                            <field name="source_code"/>
+                                            <field name="source_label"/>
+                                            <field name="is_automated"/>
+                                        </group>
+                                        <group>
+                                            <field name="url" widget="url"/>
+                                            <field name="date_checked"/>
+                                            <field name="operator_id"/>
+                                            <field name="result_summary"/>
+                                        </group>
+                                    </group>
+                                    <div role="status" class="alert alert-info"
+                                         invisible="not hint">
+                                        <field name="hint" readonly="1" nolabel="1"/>
+                                    </div>
+                                    <separator string="Operator notes"/>
+                                    <field name="operator_notes" nolabel="1"/>
+                                    <field name="source_type" invisible="1"/>
+                                    <separator string="Records captured from this search"/>
+
+                                    <!-- SOCIAL-MEDIA hits: profile URL + visibility + flag -->
+                                    <field name="hit_ids" invisible="source_type != 'social_media'">
+                                        <list editable="bottom"
+                                              decoration-danger="is_publicly_problematic"
+                                              decoration-info="account_visibility == 'private'"
+                                              decoration-muted="account_visibility in ('not_found', 'removed_deactivated')">
+                                            <field name="source_type" column_invisible="1"/>
+                                            <field name="profile_url" widget="url"/>
+                                            <field name="account_visibility"/>
+                                            <field name="is_publicly_problematic" widget="boolean_toggle"/>
+                                            <field name="notes" string="Notes"/>
+                                        </list>
+                                        <form>
+                                            <sheet>
+                                                <group>
+                                                    <field name="source_type" invisible="1"/>
+                                                    <field name="profile_url" widget="url"
+                                                           placeholder="https://x.com/username or empty if no profile found"/>
+                                                    <field name="account_visibility"/>
+                                                    <field name="is_publicly_problematic"/>
+                                                </group>
+                                                <separator string="Notes"/>
+                                                <field name="notes" nolabel="1"
+                                                       placeholder="If you marked 'publicly problematic', explain what you saw and reference the screenshots in chatter below."/>
+                                            </sheet>
+                                            <chatter/>
+                                        </form>
+                                    </field>
+
+                                    <!-- COURT / SANCTIONS / OTHER hits: full court-style fields -->
+                                    <field name="hit_ids" invisible="source_type == 'social_media'">
+                                        <list editable="bottom"
+                                              decoration-danger="role == 'defendant'"
+                                              decoration-warning="role == 'judgment_debtor'"
+                                              decoration-info="role == 'respondent'"
+                                              decoration-success="role == 'plaintiff' or role == 'petitioner'">
+                                            <field name="source_type" column_invisible="1"/>
+                                            <field name="court"/>
+                                            <field name="name_on_record"/>
+                                            <field name="role"/>
+                                            <field name="case_number"/>
+                                            <field name="offense_date"/>
+                                            <field name="dob_on_record" optional="hide"/>
+                                            <field name="address_on_record" optional="hide"/>
+                                            <field name="charges" optional="hide"/>
+                                            <field name="disposition"/>
+                                            <field name="similarity_score" widget="progressbar" optional="hide"/>
+                                            <field name="notes" optional="hide"/>
+                                        </list>
+                                    </field>
+                                </sheet>
+                            </form>
+                        </field>
+
+                        <!-- Cross-check flags -->
+                        <separator string="Cross-Check Flags"/>
+                        <p class="text-muted">
+                            Automatic anomaly warnings produced by the cross-check
+                            engine after you click <strong>Run Cross-Check</strong>
+                            (and automatically before Submit). Severity legend:
+                            <span style="color:#C0392B;"><strong>HIGH</strong></span>
+                            = address before recommending (state coverage gaps, DOB
+                            mismatches). <span style="color:#D9822A;"><strong>MEDIUM</strong></span>
+                            = verify before relying on the hit (low name similarity,
+                            missing nationwide source, address mismatch).
+                            <span style="color:#1F77B4;"><strong>LOW</strong></span>
+                            = minor inconsistency, probably benign.
+                            <span style="color:#595959;"><strong>INFO</strong></span>
+                            = completeness reminder or exculpatory context. See the
+                            <strong>Investigations → Guide</strong> menu for details
+                            on each flag type.
+                        </p>
+                        <p class="text-muted" invisible="investigation_flag_count > 0">
+                            <em>No flags yet — click Run Cross-Check at the top.</em>
+                        </p>
+                        <field name="investigation_flag_ids" readonly="1">
+                            <list decoration-danger="severity == 'high'"
+                                  decoration-warning="severity == 'medium'"
+                                  decoration-info="severity == 'low'"
+                                  decoration-muted="severity == 'info'">
+                                <field name="severity"/>
+                                <field name="category"/>
+                                <field name="message"/>
+                            </list>
+                        </field>
+
+                        <!-- Investigator notes + Denial reason -->
+                        <separator string="Investigator notes"/>
+                        <field name="investigation_notes" nolabel="1"
+                               placeholder="Free-form notes for the committee chair..."/>
+
+                        <separator string="Denial reason"
+                                   invisible="investigation_result != 'unfavorable' and not investigation_denial_reason"/>
+                        <field name="investigation_denial_reason" nolabel="1"
+                               placeholder="Required if submitting a DENY recommendation. State the basis clearly and factually."/>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- ============================================================
+             My Investigations — ticket-style inbox for committee members
+             ============================================================ -->
+        <record id="view_my_investigations_list" model="ir.ui.view">
+            <field name="name">elks.membership.application.investigations.list</field>
+            <field name="model">elks.membership.application</field>
+            <field name="arch" type="xml">
+                <list string="Investigations"
+                      decoration-danger="investigation_flag_count > 0 and investigation_result == 'unfavorable'"
+                      decoration-warning="investigation_pending_check_count > 0"
+                      decoration-success="investigation_result == 'favorable'"
+                      default_order="date_investigation_assigned asc, date_proposed asc">
+                    <field name="name"/>
+                    <field name="application_type"/>
+                    <field name="applicant_display_name"/>
+                    <field name="investigator_id"/>
+                    <field name="date_proposed"/>
+                    <field name="date_investigation_assigned"/>
+                    <field name="investigation_states_in_history" string="States"/>
+                    <field name="investigation_pending_check_count" string="Pending"/>
+                    <field name="investigation_hit_count" string="Hits"/>
+                    <field name="investigation_flag_count" string="Flags"/>
+                    <field name="investigation_result" string="Recommend"/>
+                    <field name="stage"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_my_investigations_search" model="ir.ui.view">
+            <field name="name">elks.membership.application.investigations.search</field>
+            <field name="model">elks.membership.application</field>
+            <field name="arch" type="xml">
+                <search string="Investigations">
+                    <field name="applicant_display_name"/>
+                    <field name="name"/>
+                    <field name="investigator_id"/>
+                    <filter name="unassigned" string="New (Unassigned)"
+                            domain="[('investigator_id', '=', False)]"/>
+                    <filter name="assigned" string="Open (Assigned)"
+                            domain="[('investigator_id', '!=', False), ('investigation_result', '=', False)]"/>
+                    <filter name="complete" string="Complete (Recommendation Submitted)"
+                            domain="[('investigation_result', '!=', False)]"/>
+                    <separator/>
+                    <filter name="mine" string="Assigned to me"
+                            domain="[('investigator_id.user_ids', 'in', [uid])]"/>
+                    <group>
+                        <filter name="g_status" string="Investigator"
+                                context="{'group_by': 'investigator_id'}"/>
+                        <filter name="g_result" string="Recommendation"
+                                context="{'group_by': 'investigation_result'}"/>
+                        <filter name="g_type" string="Application Type"
+                                context="{'group_by': 'application_type'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_my_investigations" model="ir.actions.act_window">
+            <field name="name">My Investigations</field>
+            <field name="res_model">elks.membership.application</field>
+            <field name="view_mode">list,form</field>
+            <field name="view_id" ref="view_my_investigations_list"/>
+            <field name="search_view_id" ref="view_my_investigations_search"/>
+            <field name="domain">[('stage', '=', 'investigation')]</field>
+            <field name="context">{
+                'search_default_unassigned': 1,
+                'search_default_assigned': 1,
+                'search_default_g_status': 1,
+            }</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">No applications waiting for your review</p>
+                <p>
+                    Applications in the <em>Under Investigation</em> stage,
+                    grouped by investigator. Committee members see their own
+                    plus unassigned (via record rule); Chairs and
+                    Administrators see all of them.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

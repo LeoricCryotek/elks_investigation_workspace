@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_portal_list" model="ir.ui.view">
+            <field name="name">elks.portal.list</field>
+            <field name="model">elks.portal</field>
+            <field name="arch" type="xml">
+                <list editable="bottom" default_order="jurisdiction_code, sequence, source_code">
+                    <field name="jurisdiction_code"/>
+                    <field name="source_code"/>
+                    <field name="source_label"/>
+                    <field name="url" widget="url"/>
+                    <field name="is_automated"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+        <record id="view_portal_form" model="ir.ui.view">
+            <field name="name">elks.portal.form</field>
+            <field name="model">elks.portal</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="jurisdiction_code"/>
+                                <field name="source_code"/>
+                                <field name="source_label"/>
+                                <field name="sequence"/>
+                            </group>
+                            <group>
+                                <field name="url" widget="url"/>
+                                <field name="is_automated"/>
+                                <field name="active"/>
+                            </group>
+                        </group>
+                        <separator string="Operator hint"/>
+                        <field name="hint" nolabel="1"/>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="action_portals" model="ir.actions.act_window">
+            <field name="name">Records Portal Directory</field>
+            <field name="res_model">elks.portal</field>
+            <field name="view_mode">list,form</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- ============================================================
+             "Investigation Committee" privilege under PRODUCTIVITY
+             ============================================================
+             Renders as a row in the Productivity section of the user's
+             Access Rights tab, with a dropdown of the four levels:
+                * (blank)         No permissions
+                * Committee Member
+                * Chairman
+                * Administration
+             Implications cascade: Chair includes Committee, Admin
+             includes Chair (and Lodge Secretary backup access).
+        -->
+        <record id="res_groups_privilege_elks_investigation" model="res.groups.privilege">
+            <field name="name">Elks Investigation Committee</field>
+            <field name="category_id" ref="base.module_category_productivity"/>
+            <field name="sequence">85</field>
+        </record>
+
+        <!-- Level 10 — Committee Member -->
+        <record id="group_elks_investigation_committee" model="res.groups">
+            <field name="name">Committee Member</field>
+            <field name="privilege_id" ref="res_groups_privilege_elks_investigation"/>
+            <field name="sequence">10</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Investigation Committee Member. Can claim
+                unassigned investigations and work the ones assigned to them.
+                Cannot see other committee members' active investigations.</field>
+        </record>
+
+        <!-- Level 20 — Chairman -->
+        <record id="group_elks_investigation_chair" model="res.groups">
+            <field name="name">Chairman</field>
+            <field name="privilege_id" ref="res_groups_privilege_elks_investigation"/>
+            <field name="sequence">20</field>
+            <field name="implied_ids" eval="[(4, ref('group_elks_investigation_committee'))]"/>
+            <field name="comment">Investigation Committee Chair. Sees all
+                investigations including past ones. Manages assignments and
+                the portal directory.</field>
+        </record>
+
+        <!-- Level 30 — Administration -->
+        <record id="group_elks_investigation_admin" model="res.groups">
+            <field name="name">Administration</field>
+            <field name="privilege_id" ref="res_groups_privilege_elks_investigation"/>
+            <field name="sequence">30</field>
+            <field name="implied_ids" eval="[
+                (4, ref('group_elks_investigation_chair')),
+                (4, ref('elkscontacts.group_elks_secretary')),
+            ]"/>
+            <field name="comment">Investigation Administration. Same access
+                as Chair plus Secretary-equivalent oversight. Auto-granted to
+                whoever currently holds Lodge Secretary or Exalted Ruler, and
+                to any user manually added on this row in their Access Rights
+                settings.</field>
+        </record>
+
+        <!-- ============================================================
+             Record rule: Committee Members see own + unassigned only.
+             Higher tiers (Chair, Admin) have no restriction (Odoo unions
+             group-based rules permissively).
+             ============================================================ -->
+        <record id="rule_app_committee_own_or_unassigned" model="ir.rule">
+            <field name="name">Application: Committee sees own + unassigned investigations</field>
+            <field name="model_id" ref="elkscontacts.model_elks_membership_application"/>
+            <field name="groups" eval="[(4, ref('group_elks_investigation_committee'))]"/>
+            <field name="domain_force">[
+                '|', '|',
+                ('stage', '!=', 'investigation'),
+                ('investigator_id', '=', False),
+                ('investigator_id', '=', user.partner_id.id),
+            ]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- ============================================================
+             Auto-sync cron — runs nightly to reconcile roles with the
+             current Lodge organizational state (Investigation committee
+             members + chair + Exalted Ruler). Additive only: never
+             revokes a manually-assigned role.
+             ============================================================ -->
+        <record id="ir_cron_sync_investigation_roles" model="ir.cron">
+            <field name="name">Elks: Sync Investigation Committee roles</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="state">code</field>
+            <field name="code">model._sync_investigation_roles()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+        </record>
+
+    </data>
+</odoo>
