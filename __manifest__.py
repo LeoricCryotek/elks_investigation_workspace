@@ -1,6 +1,6 @@
 {
     "name": "Elks Investigation Workspace",
-    "version": "19.0.1.7.2",
+    "version": "19.0.1.8.1",
     "category": "Membership / Investigation",
     "summary": "Investigator workspace for Elks membership applications: "
                "ticket-style worklist, FCRA-aware background checks, automated "
