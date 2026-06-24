@@ -1,3 +1,4 @@
+from . import install_hooks
 from . import portal_directory
 from . import history_lines
 from . import investigation_check

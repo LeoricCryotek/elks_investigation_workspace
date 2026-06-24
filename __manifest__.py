@@ -1,6 +1,6 @@
 {
     "name": "Elks Investigation Workspace",
-    "version": "19.0.1.8.1",
+    "version": "19.0.1.9.0",
     "category": "Membership / Investigation",
     "summary": "Investigator workspace for Elks membership applications: "
                "ticket-style worklist, FCRA-aware background checks, automated "
@@ -79,4 +79,5 @@ Treasury distributes it specifically for this purpose.
     ],
     "installable": True,
     "application": True,
+    "pre_init_hook": "pre_init_check",
 }

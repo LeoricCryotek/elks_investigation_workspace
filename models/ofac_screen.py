@@ -107,11 +107,29 @@ class OfacScreen(models.AbstractModel):
 
     @api.model
     def screen_application(self, application):
-        """Run the OFAC SDN screen for an elks.membership.application."""
+        """Run the OFAC SDN screen for an elks.membership.application.
+
+        Returns a dict with keys:
+          hits     — list of match dicts (empty when none)
+          summary  — human-readable summary line
+          searched — count of individuals scanned (0 on download failure)
+          failed   — True if download/parse failed
+          error    — error message when failed=True
+        """
         try:
             individuals = self._individuals()
         except Exception as exc:
-            raise UserError(_("Could not download or parse the OFAC SDN list: %s") % exc)
+            # T4 — graceful failure: caller creates a portal_unavailable
+            # check row instead of bubbling a UserError that interrupts the
+            # workflow.
+            _logger.warning("OFAC screen failed for %s: %s", application.name, exc)
+            return {
+                "hits": [],
+                "summary": f"OFAC CSV download failed: {exc}",
+                "searched": 0,
+                "failed": True,
+                "error": str(exc),
+            }
         names = [application.applicant_display_name or ""]
         if application.applicant_first_name and application.applicant_last_name:
             names.append(f"{application.applicant_first_name} {application.applicant_last_name}")
@@ -139,7 +157,13 @@ class OfacScreen(models.AbstractModel):
         hits.sort(key=lambda h: -h["score"])
         summary = (f"Searched {len(individuals):,} OFAC individuals with similarity "
                    f">= {self.SIMILARITY_THRESHOLD:.2f}; {len(hits)} match(es).")
-        return {"hits": hits, "summary": summary, "searched": len(individuals)}
+        return {
+            "hits": hits,
+            "summary": summary,
+            "searched": len(individuals),
+            "failed": False,
+            "error": None,
+        }
 
 
 # ---------------------------------------------------------------------------

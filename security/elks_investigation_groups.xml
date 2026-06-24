@@ -80,6 +80,83 @@
         </record>
 
         <!-- ============================================================
+             T3 — Sub-model record rules.
+             Non-committee Officers may READ investigation sub-records
+             (checks, hits, flags, history, references) only AFTER the
+             parent application has left the investigation stage. They
+             can never write to them.
+
+             Committee / Chair / Admin / Secretary have full access via
+             ir.model.access.csv ACLs; these rules don't restrict them
+             because group-based rules union permissively across groups
+             a user belongs to.
+
+             Note: the sub-models' ACLs already deny write to non-committee
+             users (perm_write=0). These rules add the read-after-stage
+             permission for officers who don't otherwise have CRUD.
+             ============================================================ -->
+        <record id="rule_check_officer_read_after_stage" model="ir.rule">
+            <field name="name">Check: Members read after investigation</field>
+            <field name="model_id" ref="model_elks_investigation_check"/>
+            <field name="groups" eval="[(4, ref('elkscontacts.group_elks_member'))]"/>
+            <field name="domain_force">[('application_id.stage', '!=', 'investigation')]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+        <record id="rule_hit_officer_read_after_stage" model="ir.rule">
+            <field name="name">Hit: Members read after investigation</field>
+            <field name="model_id" ref="model_elks_investigation_hit"/>
+            <field name="groups" eval="[(4, ref('elkscontacts.group_elks_member'))]"/>
+            <field name="domain_force">[('application_id.stage', '!=', 'investigation')]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+        <record id="rule_flag_officer_read_after_stage" model="ir.rule">
+            <field name="name">Flag: Members read after investigation</field>
+            <field name="model_id" ref="model_elks_investigation_flag"/>
+            <field name="groups" eval="[(4, ref('elkscontacts.group_elks_member'))]"/>
+            <field name="domain_force">[('application_id.stage', '!=', 'investigation')]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+        <record id="rule_address_history_officer_read_after_stage" model="ir.rule">
+            <field name="name">Address history: Members read after investigation</field>
+            <field name="model_id" ref="model_elks_investigation_address_history"/>
+            <field name="groups" eval="[(4, ref('elkscontacts.group_elks_member'))]"/>
+            <field name="domain_force">[('application_id.stage', '!=', 'investigation')]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+        <record id="rule_employment_history_officer_read_after_stage" model="ir.rule">
+            <field name="name">Employment history: Members read after investigation</field>
+            <field name="model_id" ref="model_elks_investigation_employment_history"/>
+            <field name="groups" eval="[(4, ref('elkscontacts.group_elks_member'))]"/>
+            <field name="domain_force">[('application_id.stage', '!=', 'investigation')]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+        <record id="rule_reference_officer_read_after_stage" model="ir.rule">
+            <field name="name">Reference: Members read after investigation</field>
+            <field name="model_id" ref="model_elks_investigation_reference"/>
+            <field name="groups" eval="[(4, ref('elkscontacts.group_elks_member'))]"/>
+            <field name="domain_force">[('application_id.stage', '!=', 'investigation')]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- ============================================================
              Auto-sync cron — runs nightly to reconcile roles with the
              current Lodge organizational state (Investigation committee
              members + chair + Exalted Ruler). Additive only: never

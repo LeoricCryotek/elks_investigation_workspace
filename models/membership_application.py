@@ -125,6 +125,18 @@ class ElksMembershipApplication(models.Model):
         tracking=True,
     )
 
+    # T7 — Reopen reason: required for a Chair to overturn a submitted
+    # recommendation (edit investigation_result or date_investigation_complete
+    # after they were set).
+    investigation_reopen_reason = fields.Text(
+        string="Reopen Reason",
+        help="Written explanation when the Chair overturns or reopens a "
+             "submitted investigation recommendation. Required when editing "
+             "investigation_result or date_investigation_complete after the "
+             "initial submission.",
+        tracking=True,
+    )
+
     # Claim button — visible when the application is in 'investigation' stage,
     # the investigator slot is empty, AND the current user is on the Investigation
     # Committee.
@@ -211,6 +223,31 @@ class ElksMembershipApplication(models.Model):
     # ------------------------------------------------------------------
     # Workspace actions
     # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # Helper: is the current user holding Chair-equivalent permissions?
+    # Used by Tasks 2 and 7.
+    # ------------------------------------------------------------------
+    def _current_user_is_investigation_chair(self):
+        u = self.env.user
+        return (
+            u.has_group("elks_investigation_workspace.group_elks_investigation_chair")
+            or u.has_group("elks_investigation_workspace.group_elks_investigation_admin")
+        )
+
+    # ------------------------------------------------------------------
+    # T2 — Stage transition guard: balloting requires a recommendation
+    # OR Chair-level override.
+    # ------------------------------------------------------------------
+    def action_move_to_balloting(self):
+        for rec in self:
+            if not rec.investigation_result and not rec._current_user_is_investigation_chair():
+                raise UserError(_(
+                    "Investigation recommendation is required before balloting. "
+                    "Submit APPROVE or DENY first, or ask the Investigation Chair "
+                    "to move the application directly."
+                ))
+        return super().action_move_to_balloting()
+
     def action_investigation_claim(self):
         """First investigator to open an unassigned investigation claims it."""
         self.ensure_one()
@@ -220,6 +257,13 @@ class ElksMembershipApplication(models.Model):
             raise UserError(
                 _("This investigation is already assigned to %s.") % self.investigator_id.name
             )
+        # T5 — fail early if the user has no partner record linked
+        if not self.env.user.partner_id:
+            raise UserError(_(
+                "Your user account is not linked to a member record. Ask the "
+                "Secretary to update your Access Rights before claiming "
+                "investigations."
+            ))
         if self.env.user.partner_id not in self.investigation_committee_member_ids:
             raise UserError(
                 _("Only Investigation Committee members can claim an investigation.")
@@ -233,6 +277,34 @@ class ElksMembershipApplication(models.Model):
             message_type="comment", subtype_xmlid="mail.mt_note",
         )
 
+    # ------------------------------------------------------------------
+    # T1 — Required-field gate: which applicant fields must be present
+    # before checks can be auto-seeded.
+    # ------------------------------------------------------------------
+    _SEED_REQUIRED_FIELDS = (
+        ("applicant_first_name", "First Name"),
+        ("applicant_last_name", "Last Name"),
+        ("applicant_date_of_birth", "Date of Birth"),
+        ("applicant_state_id", "Current State"),
+    )
+
+    def _check_seed_prerequisites(self):
+        """Raise UserError naming the missing applicant fields required
+        before auto-seeding background checks. Also requires at least one
+        of street / city."""
+        self.ensure_one()
+        missing = [label for fname, label in self._SEED_REQUIRED_FIELDS if not self[fname]]
+        if not (self.applicant_street or self.applicant_city):
+            missing.append("Street or City")
+        if missing:
+            raise UserError(_(
+                "Cannot seed background checks — the applicant's record is "
+                "missing required information:\n\n• %s\n\n"
+                "Update the application's Contact Info tab and try again. "
+                "(The application can still enter the Investigation stage; "
+                "checks are seeded once these fields are present.)"
+            ) % "\n• ".join(missing))
+
     def action_investigation_seed_checks(self):
         """Pre-create a Check record for every portal that applies to this
         applicant's jurisdictions. Called automatically when the application
@@ -243,13 +315,20 @@ class ElksMembershipApplication(models.Model):
         groups that have direct write access to Check records. The seeding
         is a system-managed side effect of the workflow transition; the
         Check ACLs still govern who can later edit those records.
+
+        T1: raises UserError if required applicant fields are missing.
+        T6: posts a chatter summary after seeding (count + jurisdictions).
         """
         Portal = self.env["elks.portal"].sudo()
         Check = self.env["elks.investigation.check"].sudo()
         for rec in self:
+            rec._check_seed_prerequisites()
             existing = {(c.jurisdiction_code, c.source_code) for c in rec.investigation_check_ids}
             jurisdictions = ["NATIONAL"] + rec._investigation_state_codes()
+            touched_jurisdictions = []
+            created_count = 0
             for juris in jurisdictions:
+                juris_added_here = False
                 for p in Portal.search([("jurisdiction_code", "=", juris),
                                          ("active", "=", True)]):
                     if (p.jurisdiction_code, p.source_code) in existing:
@@ -265,10 +344,39 @@ class ElksMembershipApplication(models.Model):
                         "is_automated": p.is_automated,
                         "result_summary": "pending",
                     })
+                    created_count += 1
+                    juris_added_here = True
+                if juris_added_here:
+                    touched_jurisdictions.append(juris)
+            # T6 — chatter log
+            if created_count:
+                rec.message_post(
+                    body=_(
+                        "<strong>Investigation checks seeded.</strong><br/>"
+                        "Created %(n)d new check(s) for jurisdictions: %(j)s"
+                    ) % {
+                        "n": created_count,
+                        "j": ", ".join(touched_jurisdictions) or "(none)",
+                    },
+                    message_type="comment", subtype_xmlid="mail.mt_note",
+                )
+            else:
+                rec.message_post(
+                    body=_(
+                        "Investigation checks already up to date — no new "
+                        "portals required (idempotent re-seed)."
+                    ),
+                    message_type="comment", subtype_xmlid="mail.mt_note",
+                )
         return True
 
     def action_investigation_run_ofac(self):
-        """Run the automated OFAC SDN screen for this application."""
+        """Run the automated OFAC SDN screen for this application.
+
+        T4: on download / parse failure, still create the OFAC check row
+        but mark it 'portal_unavailable' with the error in operator_notes,
+        rather than bubbling a UserError that aborts the whole action.
+        """
         self.ensure_one()
         result = self.env["elks.ofac.screen"].screen_application(self)
         # Remove any previous OFAC check
@@ -276,29 +384,47 @@ class ElksMembershipApplication(models.Model):
             lambda c: c.jurisdiction_code == "NATIONAL" and c.source_code == "OFAC SDN"
         )
         prev.sudo().unlink()
-        # Create the new check (sudo — system-driven, not a manual user create)
-        check_vals = {
-            "application_id": self.id,
-            "jurisdiction_code": "NATIONAL",
-            "source_code": "OFAC SDN",
-            "source_label": "OFAC SDN (automated, official Treasury CSV)",
-            "url": "https://www.treasury.gov/ofac/downloads/sdn.csv",
-            "date_checked": fields.Date.today(),
-            "operator_id": self.env.user.id,
-            "is_automated": True,
-            "result_summary": "no_records" if not result["hits"] else "match_found",
-            "operator_notes": result["summary"],
-            "hit_ids": [(0, 0, {
+        # Decide the result_summary for the new check row.
+        if result.get("failed"):
+            result_summary = "portal_unavailable"
+            hit_payload = []
+        elif result["hits"]:
+            result_summary = "match_found"
+            hit_payload = [(0, 0, {
                 "name_on_record": h["sdn_name"],
                 "case_number": f"OFAC#{h['ent_num']}",
                 "charges": f"OFAC SDN — Program: {h['program']}",
                 "disposition": f"Listed (Title: {h.get('title','-')})",
                 "notes": (h.get("remarks") or "")[:500],
                 "similarity_score": h["score"],
-            }) for h in result["hits"]],
+            }) for h in result["hits"]]
+        else:
+            result_summary = "no_records"
+            hit_payload = []
+        # Create the new check (sudo — system-driven, not a manual user create)
+        check_vals = {
+            "application_id": self.id,
+            "jurisdiction_code": "NATIONAL",
+            "source_code": "OFAC SDN",
+            "source_label": "OFAC SDN (automated, official Treasury CSV)",
+            "source_type": "sanctions",
+            "url": "https://www.treasury.gov/ofac/downloads/sdn.csv",
+            "date_checked": fields.Date.today(),
+            "operator_id": self.env.user.id,
+            "is_automated": True,
+            "result_summary": result_summary,
+            "operator_notes": result["summary"],
+            "hit_ids": hit_payload,
         }
         self.env["elks.investigation.check"].sudo().create(check_vals)
-        if not result["hits"]:
+        if result.get("failed"):
+            self.message_post(
+                body=_("⚠ Automated OFAC screen FAILED — Treasury CSV could not be "
+                       "downloaded or parsed. The OFAC check row is marked "
+                       "<em>portal unavailable</em>. Reason: %s") % result.get("error", "unknown"),
+                message_type="comment", subtype_xmlid="mail.mt_note",
+            )
+        elif not result["hits"]:
             self.message_post(
                 body=_("Automated OFAC screen — no matches above 0.85 similarity. "
                        "%s individuals searched.") % result["searched"],
@@ -572,8 +698,49 @@ class ElksMembershipApplication(models.Model):
 
     # ------------------------------------------------------------------
     # Hook: when application moves to investigation, auto-seed checks
+    # T7 hook: lock investigation_result and date_investigation_complete
+    # once they're set, unless the Chair provides a reopen reason.
     # ------------------------------------------------------------------
+    _LOCKED_RECOMMENDATION_FIELDS = ("investigation_result", "date_investigation_complete")
+
     def write(self, vals):
+        # T7 — one-way recommendation lock
+        edits_locked_fields = any(f in vals for f in self._LOCKED_RECOMMENDATION_FIELDS)
+        if edits_locked_fields:
+            for rec in self:
+                already_submitted = bool(rec.investigation_result)
+                if not already_submitted:
+                    continue  # first write is the submission itself; allow it
+                # The action_investigation_accept/deny methods clear and re-set
+                # these as part of the same Python frame. To allow that path,
+                # we check whether the incoming write matches the existing
+                # values — re-writes of the SAME values are no-ops we permit.
+                changing = False
+                for f in self._LOCKED_RECOMMENDATION_FIELDS:
+                    if f in vals and vals[f] != rec[f]:
+                        changing = True
+                        break
+                if not changing:
+                    continue
+                # An actual change to investigation_result / completion date
+                # after submission. Require Chair role AND a reopen reason.
+                if not rec._current_user_is_investigation_chair():
+                    raise UserError(_(
+                        "Investigation recommendation is already submitted. "
+                        "Only the Chair can reopen this investigation, and "
+                        "must provide a reason."
+                    ))
+                # Either the reopen_reason is in the same write, or it's
+                # already set on the record.
+                reopen_in_vals = (vals.get("investigation_reopen_reason") or "").strip()
+                reopen_on_rec = (rec.investigation_reopen_reason or "").strip()
+                if not (reopen_in_vals or reopen_on_rec):
+                    raise UserError(_(
+                        "Reopening a submitted investigation requires a "
+                        "written Reopen Reason. Fill in the field and try "
+                        "again."
+                    ))
+
         res = super().write(vals)
         if vals.get("stage") == "investigation":
             for rec in self:
